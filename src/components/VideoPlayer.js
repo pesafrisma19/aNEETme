@@ -54,7 +54,7 @@ export default function VideoPlayer({ url, qualities, title, ...option }) {
       airplay: true,
       title: title || "Video Player",
       moreVideoAttr: {
-        crossOrigin: "anonymous",
+        referrerPolicy: "no-referrer"
       },
       customType: {
         m3u8: function (video, url) {
