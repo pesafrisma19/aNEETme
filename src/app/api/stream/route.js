@@ -11,7 +11,11 @@ export async function GET(request) {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
   try {
-    // 1. Programmatic Login to get fresh token
+    // 1. Programmatic Login using randomized credentials for unlimited free tickets
+    const randomId = Math.floor(100000 + Math.random() * 900000);
+    const randomUser = `User_${randomId}`;
+    const randomEmail = `user_${randomId}@gmail.com`;
+
     const loginRes = await fetch("https://apps.animekita.org/api/v1.2.5/model/login.php", {
       method: "POST",
       headers: {
@@ -20,9 +24,9 @@ export async function GET(request) {
         "user-agent": "Dart/3.9 (dart:io)"
       },
       body: JSON.stringify({
-        "user": "Gemini Tujuh",
-        "email": "geminitujuh00019@gmail.com",
-        "profil": "https://lh3.googleusercontent.com/a/ACg8ocKDmEYbdtB76hv6loaY5Ead7kx-Dw7JndSqUqbuaxRcUrU5ng=s96-c"
+        "user": randomUser,
+        "email": randomEmail,
+        "profil": ""
       })
     });
 
