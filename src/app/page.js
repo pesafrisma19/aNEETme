@@ -72,9 +72,85 @@ export default function Home() {
     }
   };
 
+  const [selectedGenre, setSelectedGenre] = useState("");
+  const [genrePage, setGenrePage] = useState(1);
+  const [allGenreAnime, setAllGenreAnime] = useState([]);
+  const [genreLoading, setGenreLoading] = useState(false);
+  const [genreError, setGenreError] = useState(null);
+  const [hasMoreGenre, setHasMoreGenre] = useState(true);
+
+  const genresList = [
+    { name: "Semua Genre", slug: "" },
+    { name: "Action", slug: "action" },
+    { name: "Adventure", slug: "adventure" },
+    { name: "Fantasy", slug: "fantasy" },
+    { name: "Romance", slug: "romance" },
+    { name: "Drama", slug: "drama" },
+    { name: "Comedy", slug: "comedy" },
+    { name: "Slice of Life", slug: "slice-of-life" },
+    { name: "Sci-Fi", slug: "sci-fi" },
+    { name: "Mystery", slug: "mystery" },
+    { name: "Supernatural", slug: "supernatural" },
+    { name: "School", slug: "school" },
+    { name: "Ecchi", slug: "ecchi" }
+  ];
+
+  // Fetch genre anime with pagination
+  useEffect(() => {
+    if (selectedGenre && activeTab === "home" && !submittedQuery) {
+      setGenrePage(1);
+      setGenreLoading(true);
+      setGenreError(null);
+      setHasMoreGenre(true);
+
+      fetch(`/api/search?genre=${selectedGenre}&page=1`)
+        .then((res) => {
+          if (!res.ok) throw new Error("Gagal memuat");
+          return res.json();
+        })
+        .then((data) => {
+          setAllGenreAnime(data.results || []);
+          if ((data.results || []).length < 20) {
+            setHasMoreGenre(false);
+          }
+        })
+        .catch((err) => {
+          setGenreError(err.message);
+        })
+        .finally(() => {
+          setGenreLoading(false);
+        });
+    }
+  }, [selectedGenre, activeTab, submittedQuery]);
+
+  const loadMoreGenre = async () => {
+    if (genreLoading || !hasMoreGenre) return;
+    setGenreLoading(true);
+    const nextPage = genrePage + 1;
+    try {
+      const res = await fetch(`/api/search?genre=${selectedGenre}&page=${nextPage}`);
+      if (!res.ok) throw new Error("Gagal memuat");
+      const data = await res.json();
+      const newItems = data.results || [];
+      if (newItems.length > 0) {
+        setAllGenreAnime((prev) => [...prev, ...newItems]);
+        setGenrePage(nextPage);
+        if (newItems.length < 20) {
+          setHasMoreGenre(false);
+        }
+      } else {
+        setHasMoreGenre(false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setGenreLoading(false);
+    }
+  };
+
   // Fetch top airing
   const { data: topAnime, error: topError } = useSWR(
-    activeTab === "home" && !submittedQuery ? "/api/search?type=top" : null,
+    activeTab === "home" && !submittedQuery && !selectedGenre ? "/api/search?type=top" : null,
     fetcher
   );
 
@@ -117,6 +193,7 @@ export default function Home() {
     setActiveTab(tabName);
     setSubmittedQuery("");
     setSearchVal("");
+    setSelectedGenre(""); // Reset genre filter
     // Update URL query parameter silently
     const newUrl = tabName === "home" ? "/" : `/?tab=${tabName}`;
     window.history.pushState({ path: newUrl }, "", newUrl);
@@ -134,12 +211,14 @@ export default function Home() {
     if (searchVal.trim()) {
       setSubmittedQuery(searchVal.trim());
       setActiveTab("home");
+      setSelectedGenre(""); // Reset genre filter when searching
     }
   };
 
   const handleClearSearch = () => {
     setSearchVal("");
     setSubmittedQuery("");
+    setSelectedGenre(""); // Reset genre filter
   };
 
   return (
@@ -200,33 +279,77 @@ export default function Home() {
         gap: "20px",
         marginBottom: "32px"
       }}>
-        {/* Tab Buttons */}
-        <div className="glass" style={{
-          display: "flex",
-          padding: "4px",
-          borderRadius: "var(--border-radius-sm)",
-          border: "1px solid var(--glass-border)",
-        }}>
-          {["home", "bookmarks", "history"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => handleTabChange(tab)}
-              style={{
-                background: activeTab === tab ? "var(--accent-cyan)" : "transparent",
-                color: activeTab === tab ? "#000" : "var(--foreground-secondary)",
-                border: "none",
-                padding: "8px 20px",
-                borderRadius: "calc(var(--border-radius-sm) - 4px)",
-                fontWeight: 600,
-                fontSize: "0.9rem",
-                cursor: "pointer",
-                textTransform: "capitalize",
-                transition: "var(--transition-smooth)"
-              }}
-            >
-              {tab === "home" ? "Utama" : tab === "bookmarks" ? "Favorit" : "Riwayat"}
-            </button>
-          ))}
+        {/* Tab & Filter Container */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "center" }}>
+          {/* Tab Buttons */}
+          <div className="glass" style={{
+            display: "flex",
+            padding: "4px",
+            borderRadius: "var(--border-radius-sm)",
+            border: "1px solid var(--glass-border)",
+          }}>
+            {["home", "bookmarks", "history"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => handleTabChange(tab)}
+                style={{
+                  background: activeTab === tab ? "var(--accent-cyan)" : "transparent",
+                  color: activeTab === tab ? "#000" : "var(--foreground-secondary)",
+                  border: "none",
+                  padding: "8px 20px",
+                  borderRadius: "calc(var(--border-radius-sm) - 4px)",
+                  fontWeight: 600,
+                  fontSize: "0.9rem",
+                  cursor: "pointer",
+                  textTransform: "capitalize",
+                  transition: "var(--transition-smooth)"
+                }}
+              >
+                {tab === "home" ? "Utama" : tab === "bookmarks" ? "Favorit" : "Riwayat"}
+              </button>
+            ))}
+          </div>
+
+          {/* Genre Dropdown Filter */}
+          {activeTab === "home" && !submittedQuery && (
+            <div style={{ position: "relative" }}>
+              <select
+                value={selectedGenre}
+                onChange={(e) => setSelectedGenre(e.target.value)}
+                style={{
+                  padding: "8px 32px 8px 16px",
+                  borderRadius: "var(--border-radius-sm)",
+                  background: "var(--bg-secondary)",
+                  color: "var(--foreground-primary)",
+                  border: "1px solid var(--glass-border)",
+                  fontSize: "0.9rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  appearance: "none",
+                  outline: "none",
+                  transition: "var(--transition-smooth)"
+                }}
+              >
+                {genresList.map((g) => (
+                  <option key={g.slug} value={g.slug} style={{ background: "var(--bg-primary)" }}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+              {/* Custom Down Arrow Icon */}
+              <span style={{
+                position: "absolute",
+                right: "12px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                pointerEvents: "none",
+                fontSize: "0.8rem",
+                color: "var(--foreground-muted)"
+              }}>
+                ▼
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Search Input Form */}
@@ -320,87 +443,158 @@ export default function Home() {
       {!submittedQuery && activeTab === "home" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
           
-          {/* Recent Episodes */}
-          <section>
-            <h2 style={{ fontSize: "1.6rem", display: "flex", alignItems: "center", gap: "10px" }}>
-              🆕 Episode Baru <span className="gradient-text">Rilis</span>
-            </h2>
-            
-            {recentError && <p style={{ color: "red", marginTop: "10px" }}>Gagal memuat episode terbaru.</p>}
-            
-            {recentLoading && allRecentAnime.length === 0 && (
-              <div className="anime-grid">
-                {[...Array(12)].map((_, i) => (
-                  <div key={i} className="shimmer" style={{ width: "100%", aspectRatio: "2/3", borderRadius: "var(--border-radius-md)" }} />
-                ))}
+          {selectedGenre ? (
+            /* Genre Filter Results */
+            <section>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                <h2 style={{ fontSize: "1.6rem" }}>
+                  Genre: <span className="gradient-text">{genresList.find(g => g.slug === selectedGenre)?.name}</span>
+                </h2>
+                <button 
+                  onClick={() => setSelectedGenre("")} 
+                  className="btn btn-secondary" 
+                  style={{ padding: "6px 14px", fontSize: "0.85rem" }}
+                >
+                  Tutup Filter
+                </button>
               </div>
-            )}
 
-            {allRecentAnime.length > 0 && (
-              <>
+              {genreError && <p style={{ color: "red", marginTop: "10px" }}>Gagal memuat anime untuk genre ini.</p>}
+              
+              {genreLoading && allGenreAnime.length === 0 && (
                 <div className="anime-grid">
-                  {allRecentAnime.map((anime) => (
-                    <AnimeCard
-                      key={anime.id}
-                      id={anime.id}
-                      title={anime.title}
-                      image={anime.image}
-                      episodeNumber={anime.episodeNumber}
-                      releaseDate={anime.releaseDate}
-                    />
+                  {[...Array(12)].map((_, i) => (
+                    <div key={i} className="shimmer" style={{ width: "100%", aspectRatio: "2/3", borderRadius: "var(--border-radius-md)" }} />
                   ))}
                 </div>
+              )}
+
+              {allGenreAnime.length > 0 && (
+                <>
+                  <div className="anime-grid">
+                    {allGenreAnime.map((anime) => (
+                      <AnimeCard
+                        key={anime.id}
+                        id={anime.id}
+                        title={anime.title}
+                        image={anime.image}
+                        releaseDate={anime.releaseDate}
+                      />
+                    ))}
+                  </div>
+                  
+                  {hasMoreGenre && (
+                    <div style={{ display: "flex", justifyContent: "center", marginTop: "32px" }}>
+                      <button 
+                        onClick={loadMoreGenre} 
+                        className="btn btn-primary" 
+                        disabled={genreLoading}
+                        style={{ 
+                          padding: "12px 36px", 
+                          fontWeight: 600,
+                          fontSize: "0.95rem",
+                          borderRadius: "var(--border-radius-sm)"
+                        }}
+                      >
+                        {genreLoading ? "Memuat..." : "Muat Lebih Banyak"}
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {allGenreAnime.length === 0 && !genreLoading && !genreError && (
+                <p style={{ color: "var(--foreground-muted)", textAlign: "center", marginTop: "20px" }}>
+                  Tidak ada anime ditemukan untuk genre ini.
+                </p>
+              )}
+            </section>
+          ) : (
+            /* Default lists (Recent & Top Airing) */
+            <>
+              {/* Recent Episodes */}
+              <section>
+                <h2 style={{ fontSize: "1.6rem", display: "flex", alignItems: "center", gap: "10px" }}>
+                  🆕 Episode Baru <span className="gradient-text">Rilis</span>
+                </h2>
                 
-                {hasMoreRecent && (
-                  <div style={{ display: "flex", justifyContent: "center", marginTop: "32px" }}>
-                    <button 
-                      onClick={loadMoreRecent} 
-                      className="btn btn-primary" 
-                      disabled={recentLoading}
-                      style={{ 
-                        padding: "12px 36px", 
-                        fontWeight: 600,
-                        fontSize: "0.95rem",
-                        borderRadius: "var(--border-radius-sm)"
-                      }}
-                    >
-                      {recentLoading ? "Memuat..." : "Muat Lebih Banyak"}
-                    </button>
+                {recentError && <p style={{ color: "red", marginTop: "10px" }}>Gagal memuat episode terbaru.</p>}
+                
+                {recentLoading && allRecentAnime.length === 0 && (
+                  <div className="anime-grid">
+                    {[...Array(12)].map((_, i) => (
+                      <div key={i} className="shimmer" style={{ width: "100%", aspectRatio: "2/3", borderRadius: "var(--border-radius-md)" }} />
+                    ))}
                   </div>
                 )}
-              </>
-            )}
-          </section>
 
-          {/* Top Airing Anime */}
-          <section>
-            <h2 style={{ fontSize: "1.6rem", display: "flex", alignItems: "center", gap: "10px" }}>
-              🔥 Sedang <span className="gradient-text-purple">Airing Populer</span>
-            </h2>
-            
-            {topError && <p style={{ color: "red", marginTop: "10px" }}>Gagal memuat anime populer.</p>}
-            
-            {!topAnime && !topError && (
-              <div className="anime-grid">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="shimmer" style={{ width: "100%", aspectRatio: "2/3", borderRadius: "var(--border-radius-md)" }} />
-                ))}
-              </div>
-            )}
+                {allRecentAnime.length > 0 && (
+                  <>
+                    <div className="anime-grid">
+                      {allRecentAnime.map((anime) => (
+                        <AnimeCard
+                          key={anime.id}
+                          id={anime.id}
+                          title={anime.title}
+                          image={anime.image}
+                          episodeNumber={anime.episodeNumber}
+                          releaseDate={anime.releaseDate}
+                        />
+                      ))}
+                    </div>
+                    
+                    {hasMoreRecent && (
+                      <div style={{ display: "flex", justifyContent: "center", marginTop: "32px" }}>
+                        <button 
+                          onClick={loadMoreRecent} 
+                          className="btn btn-primary" 
+                          disabled={recentLoading}
+                          style={{ 
+                            padding: "12px 36px", 
+                            fontWeight: 600,
+                            fontSize: "0.95rem",
+                            borderRadius: "var(--border-radius-sm)"
+                          }}
+                        >
+                          {recentLoading ? "Memuat..." : "Muat Lebih Banyak"}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </section>
 
-            {topAnime && (
-              <div className="anime-grid">
-                {topAnime.results?.map((anime) => (
-                  <AnimeCard
-                    key={anime.id}
-                    id={anime.id}
-                    title={anime.title}
-                    image={anime.image}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
+              {/* Top Airing Anime */}
+              <section>
+                <h2 style={{ fontSize: "1.6rem", display: "flex", alignItems: "center", gap: "10px" }}>
+                  🔥 Sedang <span className="gradient-text-purple">Airing Populer</span>
+                </h2>
+                
+                {topError && <p style={{ color: "red", marginTop: "10px" }}>Gagal memuat anime populer.</p>}
+                
+                {!topAnime && !topError && (
+                  <div className="anime-grid">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="shimmer" style={{ width: "100%", aspectRatio: "2/3", borderRadius: "var(--border-radius-md)" }} />
+                    ))}
+                  </div>
+                )}
+
+                {topAnime && (
+                  <div className="anime-grid">
+                    {topAnime.results?.map((anime) => (
+                      <AnimeCard
+                        key={anime.id}
+                        id={anime.id}
+                        title={anime.title}
+                        image={anime.image}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            </>
+          )}
 
         </div>
       )}

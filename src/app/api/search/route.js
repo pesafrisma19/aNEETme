@@ -4,11 +4,41 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
   const type = searchParams.get("type");
+  const genre = searchParams.get("genre");
   const page = searchParams.get("page") || "1";
 
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
   try {
+    // If it's a genre query
+    if (genre) {
+      // Ensure genre parameter ends with a slash (e.g. action/)
+      const genreSlug = genre.endsWith("/") ? genre : `${genre}/`;
+      const url = `https://apps.animekita.org/api/v1.2.5/genreseries.php?page=${page}&url=${encodeURIComponent(genreSlug.toLowerCase())}`;
+      
+      const res = await fetch(url, {
+        headers: {
+          "accept": "application/json",
+          "user-agent": "Dart/3.9 (dart:io)"
+        }
+      });
+
+      if (!res.ok) {
+        return NextResponse.json({ error: "Gagal memuat data genre" }, { status: res.status });
+      }
+
+      const items = await res.json();
+      
+      const results = items.map((item) => ({
+        id: item.link, // In genreseries.php, the slug is in the 'link' property
+        title: item.anime_name, // In genreseries.php, it's 'anime_name'
+        image: item.thumb, // In genreseries.php, it's 'thumb'
+        releaseDate: item.status || ""
+      }));
+
+      return NextResponse.json({ results });
+    }
+
     // If it's a search query
     if (query) {
       const url = `https://apps.animekita.org/api/v1.2.5/search.php?keyword=${encodeURIComponent(query)}&page=${page}&per_page=30`;
@@ -98,7 +128,7 @@ export async function GET(request) {
 
     return NextResponse.json({ results: [] });
   } catch (error) {
-    console.error("Search API Error:", error);
+    console.error("Search/Genre API Error:", error);
     return NextResponse.json({ error: "Gagal memuat data dari server" }, { status: 500 });
   }
 }
