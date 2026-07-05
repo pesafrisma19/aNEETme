@@ -4,49 +4,101 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
   const type = searchParams.get("type");
+  const page = searchParams.get("page") || "1";
 
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
   try {
-    let keyword = query || "a";
-    if (!query && type === "top") {
-      keyword = "tensei"; // Fetch popular isekai titles for top list
-    } else if (!query && type === "recent") {
-      keyword = "2026"; // Fetch recent releases
-    }
-
-    const url = `https://apps.animekita.org/api/v1.2.5/search.php?keyword=${encodeURIComponent(keyword)}&page=1&per_page=30`;
-    
-    const res = await fetch(url, {
-      headers: {
-        "accept": "application/json",
-        "user-agent": "Dart/3.9 (dart:io)"
-      }
-    });
-
-    if (!res.ok) {
-      return NextResponse.json({ error: "Gagal memuat data dari AnimeKita" }, { status: res.status });
-    }
-
-    const json = await res.json();
-    const items = json.data?.[0]?.result || [];
-
-    const results = items.map((item) => ({
-      id: item.url, // Use url identifier as ID for details route compatibility
-      title: item.judul,
-      image: item.cover,
-      releaseDate: item.status || ""
-    }));
-
+    // If it's a search query
     if (query) {
-      // Direct array for frontend search compatibility
+      const url = `https://apps.animekita.org/api/v1.2.5/search.php?keyword=${encodeURIComponent(query)}&page=${page}&per_page=30`;
+      const res = await fetch(url, {
+        headers: {
+          "accept": "application/json",
+          "user-agent": "Dart/3.9 (dart:io)"
+        }
+      });
+
+      if (!res.ok) {
+        return NextResponse.json({ error: "Gagal memuat data pencarian" }, { status: res.status });
+      }
+
+      const json = await res.json();
+      const items = json.data?.[0]?.result || [];
+
+      const results = items.map((item) => ({
+        id: item.url,
+        title: item.judul,
+        image: item.cover,
+        releaseDate: item.status || ""
+      }));
+
       return NextResponse.json(results);
     }
 
-    // Object wrapping array for recent/top homepage lists compatibility
-    return NextResponse.json({ results });
+    // If it is the home/ongoing updates feed
+    if (type === "recent" || !type) {
+      const url = `https://apps.animekita.org/api/v1.2.5/home/ongoing.php?page=${page}&type=anime`;
+      const res = await fetch(url, {
+        headers: {
+          "accept": "application/json",
+          "user-agent": "Dart/3.9 (dart:io)"
+        }
+      });
+
+      if (!res.ok) {
+        return NextResponse.json({ error: "Gagal memuat data ongoing" }, { status: res.status });
+      }
+
+      // The ongoing.php endpoint returns a direct JSON array, not wrapped in { data: [...] }
+      const items = await res.json();
+
+      const results = items.map((item) => {
+        // Clean episode number (e.g. "Ep 37" -> "37")
+        const epNum = item.lastch ? item.lastch.replace(/Ep\s*/i, "") : "";
+        return {
+          id: item.url,
+          title: item.judul,
+          image: item.cover,
+          releaseDate: item.lastup || "",
+          episodeNumber: epNum
+        };
+      });
+
+      return NextResponse.json({ results });
+    }
+
+    // If it is the popular/top list
+    if (type === "top") {
+      // Use search with a popular keyword like 'tensei' to get hot hits for top list
+      const url = `https://apps.animekita.org/api/v1.2.5/search.php?keyword=tensei&page=1&per_page=15`;
+      const res = await fetch(url, {
+        headers: {
+          "accept": "application/json",
+          "user-agent": "Dart/3.9 (dart:io)"
+        }
+      });
+
+      if (!res.ok) {
+        return NextResponse.json({ error: "Gagal memuat data top anime" }, { status: res.status });
+      }
+
+      const json = await res.json();
+      const items = json.data?.[0]?.result || [];
+
+      const results = items.map((item) => ({
+        id: item.url,
+        title: item.judul,
+        image: item.cover,
+        releaseDate: item.status || ""
+      }));
+
+      return NextResponse.json({ results });
+    }
+
+    return NextResponse.json({ results: [] });
   } catch (error) {
     console.error("Search API Error:", error);
-    return NextResponse.json({ error: "Gagal memuat pencarian" }, { status: 500 });
+    return NextResponse.json({ error: "Gagal memuat data dari server" }, { status: 500 });
   }
 }

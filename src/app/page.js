@@ -13,11 +13,64 @@ export default function Home() {
   const [bookmarks, setBookmarks] = useState([]);
   const [history, setHistory] = useState([]);
 
-  // Fetch recent episodes
-  const { data: recentAnime, error: recentError } = useSWR(
-    activeTab === "home" && !submittedQuery ? "/api/search?type=recent" : null,
-    fetcher
-  );
+  const [recentPage, setRecentPage] = useState(1);
+  const [allRecentAnime, setAllRecentAnime] = useState([]);
+  const [recentLoading, setRecentLoading] = useState(false);
+  const [recentError, setRecentError] = useState(null);
+  const [hasMoreRecent, setHasMoreRecent] = useState(true);
+
+  // Fetch recent episodes with pagination
+  useEffect(() => {
+    if (activeTab === "home" && !submittedQuery) {
+      setRecentPage(1);
+      setRecentLoading(true);
+      setRecentError(null);
+      setHasMoreRecent(true);
+
+      fetch("/api/search?type=recent&page=1")
+        .then((res) => {
+          if (!res.ok) throw new Error("Gagal memuat");
+          return res.json();
+        })
+        .then((data) => {
+          setAllRecentAnime(data.results || []);
+          if ((data.results || []).length < 20) {
+            setHasMoreRecent(false);
+          }
+        })
+        .catch((err) => {
+          setRecentError(err.message);
+        })
+        .finally(() => {
+          setRecentLoading(false);
+        });
+    }
+  }, [activeTab, submittedQuery]);
+
+  const loadMoreRecent = async () => {
+    if (recentLoading || !hasMoreRecent) return;
+    setRecentLoading(true);
+    const nextPage = recentPage + 1;
+    try {
+      const res = await fetch(`/api/search?type=recent&page=${nextPage}`);
+      if (!res.ok) throw new Error("Gagal memuat halaman berikutnya");
+      const data = await res.json();
+      const newItems = data.results || [];
+      if (newItems.length > 0) {
+        setAllRecentAnime((prev) => [...prev, ...newItems]);
+        setRecentPage(nextPage);
+        if (newItems.length < 20) {
+          setHasMoreRecent(false);
+        }
+      } else {
+        setHasMoreRecent(false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setRecentLoading(false);
+    }
+  };
 
   // Fetch top airing
   const { data: topAnime, error: topError } = useSWR(
@@ -275,26 +328,47 @@ export default function Home() {
             
             {recentError && <p style={{ color: "red", marginTop: "10px" }}>Gagal memuat episode terbaru.</p>}
             
-            {!recentAnime && !recentError && (
+            {recentLoading && allRecentAnime.length === 0 && (
               <div className="anime-grid">
-                {[...Array(6)].map((_, i) => (
+                {[...Array(12)].map((_, i) => (
                   <div key={i} className="shimmer" style={{ width: "100%", aspectRatio: "2/3", borderRadius: "var(--border-radius-md)" }} />
                 ))}
               </div>
             )}
 
-            {recentAnime && (
-              <div className="anime-grid">
-                {recentAnime.results?.map((anime) => (
-                  <AnimeCard
-                    key={anime.id}
-                    id={anime.id}
-                    title={anime.title}
-                    image={anime.image}
-                    episodeNumber={anime.episodeNumber}
-                  />
-                ))}
-              </div>
+            {allRecentAnime.length > 0 && (
+              <>
+                <div className="anime-grid">
+                  {allRecentAnime.map((anime) => (
+                    <AnimeCard
+                      key={anime.id}
+                      id={anime.id}
+                      title={anime.title}
+                      image={anime.image}
+                      episodeNumber={anime.episodeNumber}
+                      releaseDate={anime.releaseDate}
+                    />
+                  ))}
+                </div>
+                
+                {hasMoreRecent && (
+                  <div style={{ display: "flex", justifyContent: "center", marginTop: "32px" }}>
+                    <button 
+                      onClick={loadMoreRecent} 
+                      className="btn btn-primary" 
+                      disabled={recentLoading}
+                      style={{ 
+                        padding: "12px 36px", 
+                        fontWeight: 600,
+                        fontSize: "0.95rem",
+                        borderRadius: "var(--border-radius-sm)"
+                      }}
+                    >
+                      {recentLoading ? "Memuat..." : "Muat Lebih Banyak"}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </section>
 
