@@ -158,7 +158,11 @@ export default function Watch() {
               </div>
             ) : (
               videoUrl && (
-                <VideoPlayer url={videoUrl} title={`${anime?.title || "Anime"} - Episode ${currentEpNum}`} />
+                <VideoPlayer 
+                  url={videoUrl} 
+                  qualities={streamData?.sources}
+                  title={`${anime?.title || "Anime"} - Episode ${currentEpNum}`} 
+                />
               )
             )}
           </div>

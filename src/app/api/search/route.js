@@ -1,4 +1,3 @@
-import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
@@ -6,76 +5,48 @@ export async function GET(request) {
   const query = searchParams.get("q");
   const type = searchParams.get("type");
 
-  // Bypass TLS locally
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
   try {
-    if (query) {
-      // Search GogoAnime
-      const url = `https://gogoanime.by/?s=${encodeURIComponent(query)}`;
-      const res = await fetch(url);
-      const html = await res.text();
-      const $ = cheerio.load(html);
-      const results = [];
-
-      // Extract results from main container
-      $('.listupd .bsx a.tip').each((i, el) => {
-        const href = $(el).attr('href') || '';
-        const match = href.match(/\/series\/(.*?)\/?$/);
-        if (match) {
-          const id = match[1];
-          const title = $(el).find('h2[itemprop="headline"]').text().trim() || $(el).attr('title') || '';
-          const image = $(el).find('img.ts-post-image').attr('src') || '';
-          const status = $(el).find('span.epx').text().trim();
-          results.push({ id, title, image, releaseDate: status });
-        }
-      });
-
-      // Return array directly for frontend search tab compat
-      return NextResponse.json(results);
+    let keyword = query || "a";
+    if (!query && type === "top") {
+      keyword = "tensei"; // Fetch popular isekai titles for top list
+    } else if (!query && type === "recent") {
+      keyword = "2026"; // Fetch recent releases
     }
 
-    // Default: Scrape homepage recent episodes
-    const res = await fetch("https://gogoanime.by/");
-    const html = await res.text();
-    const $ = cheerio.load(html);
-    const results = [];
-
-    $('a.tip').each((i, el) => {
-      const href = $(el).attr('href') || '';
-      const title = $(el).find('h2[itemprop="headline"]').text().trim() || $(el).attr('title') || '';
-      const image = $(el).find('img.ts-post-image').attr('src') || '';
-      const status = $(el).find('span.epx').text().trim();
-
-      const match = href.match(/\/([a-zA-Z0-9\-]+)-episode-\d+/);
-      const id = match ? match[1] : '';
-
-      if (id && id !== 'series') {
-        results.push({
-          id,
-          title: title.replace(/Episode \d+.*$/, '').trim(),
-          image,
-          releaseDate: status
-        });
+    const url = `https://apps.animekita.org/api/v1.2.5/search.php?keyword=${encodeURIComponent(keyword)}&page=1&per_page=30`;
+    
+    const res = await fetch(url, {
+      headers: {
+        "accept": "application/json",
+        "user-agent": "Dart/3.9 (dart:io)"
       }
     });
 
-    const uniqueResults = [];
-    const seenIds = new Set();
-    for (const item of results) {
-      if (!seenIds.has(item.id)) {
-        seenIds.add(item.id);
-        uniqueResults.push(item);
-      }
+    if (!res.ok) {
+      return NextResponse.json({ error: "Gagal memuat data dari AnimeKita" }, { status: res.status });
     }
 
-    if (type === "top") {
-      return NextResponse.json({ results: uniqueResults.slice(0, 10) });
+    const json = await res.json();
+    const items = json.data?.[0]?.result || [];
+
+    const results = items.map((item) => ({
+      id: item.url, // Use url identifier as ID for details route compatibility
+      title: item.judul,
+      image: item.cover,
+      releaseDate: item.status || ""
+    }));
+
+    if (query) {
+      // Direct array for frontend search compatibility
+      return NextResponse.json(results);
     }
 
-    return NextResponse.json({ results: uniqueResults });
+    // Object wrapping array for recent/top homepage lists compatibility
+    return NextResponse.json({ results });
   } catch (error) {
     console.error("Search API Error:", error);
-    return NextResponse.json({ error: "Gagal mengambil data dari provider" }, { status: 500 });
+    return NextResponse.json({ error: "Gagal memuat pencarian" }, { status: 500 });
   }
 }

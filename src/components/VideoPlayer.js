@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from "react";
 import Artplayer from "artplayer";
 import Hls from "hls.js";
 
-export default function VideoPlayer({ url, title, ...option }) {
+export default function VideoPlayer({ url, qualities, title, ...option }) {
   const artRef = useRef();
 
   const isEmbed = url && (
@@ -11,17 +11,25 @@ export default function VideoPlayer({ url, title, ...option }) {
     url.includes("embed") || 
     url.includes("iframe") || 
     url.includes("9animetv") ||
-    !url.includes(".m3u8")
+    (!url.includes(".m3u8") && !url.includes(".mp4"))
   );
 
   useEffect(() => {
     if (!url || isEmbed) return;
+
+    // Map qualities for Artplayer quality switching menu
+    const artQualities = (qualities || []).map((q) => ({
+      default: q.url === url,
+      html: q.quality ? q.quality.toUpperCase() : "HD",
+      url: q.url
+    }));
 
     // Initialize Artplayer
     const art = new Artplayer({
       ...option,
       container: artRef.current,
       url: url,
+      quality: artQualities,
       theme: "#06b6d4", // Neon Cyan
       volume: 0.7,
       isLive: false,
@@ -72,7 +80,7 @@ export default function VideoPlayer({ url, title, ...option }) {
         art.destroy(false);
       }
     };
-  }, [url, title, isEmbed]);
+  }, [url, qualities, title, isEmbed]);
 
   if (isEmbed) {
     return (

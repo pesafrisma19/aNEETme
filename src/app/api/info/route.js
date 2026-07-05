@@ -1,9 +1,8 @@
-import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
+  const id = searchParams.get("id"); // This is the url key (e.g. mushoku-ni-tensei-s3-sub-indo)
 
   if (!id) {
     return NextResponse.json({ error: "Missing 'id' parameter" }, { status: 400 });
@@ -12,73 +11,70 @@ export async function GET(request) {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
   try {
-    const url = `https://gogoanime.by/series/${id}/`;
-    const res = await fetch(url);
+    // We MUST pass ?url=ID in the URL query parameters
+    const url = `https://apps.animekita.org/api/v1.2.5/series.php?url=${encodeURIComponent(id)}`;
+    
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "content-type": "text/plain; charset=utf-8",
+        "user-agent": "Dart/3.9 (dart:io)"
+      },
+      body: JSON.stringify({
+        "get": "top",
+        "post_type": "1",
+        "post_id": id,
+        "token": ""
+      })
+    });
+
+    const text = await res.text();
     if (!res.ok) {
-      return NextResponse.json({ error: "Anime tidak ditemukan" }, { status: 404 });
+      console.error("AnimeKita response not OK:", res.status, text);
+      return NextResponse.json({ error: "Gagal mengambil detail dari AnimeKita" }, { status: res.status });
     }
 
-    const html = await res.text();
-    const $ = cheerio.load(html);
-
-    const title = $('h1').text().trim();
-    const image = $('.ts-post-image').attr('src') || '';
-    const description = $('.ninfo').text().trim() || $('.ninfo p').text().trim() || '';
-
-    // Extract details
-    let status = 'Unknown';
-    let type = 'TV';
-    const genres = [];
-
-    $('.bigcontent b').each((i, el) => {
-      const label = $(el).text().trim().toLowerCase();
-      const parentText = $(el).parent().text().trim();
-      const value = parentText.replace($(el).text(), '').trim();
-
-      if (label.includes('status')) {
-        status = value;
-      } else if (label.includes('type')) {
-        type = value;
+    try {
+      // Bulletproof JSON parsing: strip any PHP warning tags if present
+      const jsonStart = text.indexOf('{');
+      if (jsonStart === -1) {
+        throw new Error("No JSON payload found in response");
       }
-    });
+      const cleanText = text.substring(jsonStart);
+      const json = JSON.parse(cleanText);
+      const info = json.data?.[0];
 
-    // Extract genres from div.genxed
-    $('.genxed a').each((i, el) => {
-      genres.push($(el).text().trim());
-    });
-
-    // Extract episodes ONLY from the main episodes list container (.episodes-container)
-    const episodes = [];
-    $('.episodes-container a').each((i, el) => {
-      const href = $(el).attr('href') || '';
-      // Match: /naruto-shippuuden-episode-500-english-subbed/
-      const match = href.match(/\/([a-zA-Z0-9\-]+-episode-(\d+)[a-zA-Z0-9\-]*)\/?$/);
-      if (match) {
-        const episodeId = match[1];
-        const episodeNumber = parseInt(match[2], 10);
-
-        if (!episodes.some(ep => ep.number === episodeNumber)) {
-          episodes.push({
-            id: episodeId,
-            number: episodeNumber,
-            title: `Episode ${episodeNumber}`
-          });
-        }
+      if (!info || info.id === 0 || !info.judul) {
+        return NextResponse.json({ error: "Anime tidak ditemukan atau data kosong" }, { status: 404 });
       }
-    });
 
-    // Sort episodes ascending (1, 2, 3...)
-    episodes.sort((a, b) => a.number - b.number);
+      // Map genres
+      const genres = info.genre || [];
 
-    return NextResponse.json({
-      title,
-      image,
-      description,
-      status,
-      type,
-      genres,
-      episodes
-    });
+      // Map episodes/chapters
+      const episodes = (info.chapter || []).map((ch) => ({
+        id: ch.url, // This will be passed to /api/stream?id=al-154132-1
+        number: parseInt(ch.ch, 10) || 1,
+        title: `Episode ${ch.ch}`
+      }));
+
+      // Sort episodes ascending
+      episodes.sort((a, b) => a.number - b.number);
+
+      return NextResponse.json({
+        title: info.judul,
+        image: info.cover,
+        description: info.sinopsis || "Tidak ada deskripsi.",
+        status: info.status || "Unknown",
+        type: info.type || "TV",
+        genres,
+        episodes
+      });
+    } catch (parseError) {
+      console.error("Failed to parse AnimeKita response. Raw text:", text);
+      throw parseError;
+    }
   } catch (error) {
     console.error("Info API Error:", error);
     return NextResponse.json({ error: "Gagal mengambil detail anime" }, { status: 500 });

@@ -1,9 +1,8 @@
-import * as cheerio from "cheerio";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
+  const id = searchParams.get("id"); // This is the url key (e.g. al-154132-1)
 
   if (!id) {
     return NextResponse.json({ error: "Missing 'id' parameter" }, { status: 400 });
@@ -12,61 +11,86 @@ export async function GET(request) {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
   try {
-    const url = `https://gogoanime.by/${id}/`;
-    const res = await fetch(url);
-    if (!res.ok) {
-      return NextResponse.json({ error: "Episode tidak ditemukan" }, { status: 404 });
+    // 1. Programmatic Login to get fresh token
+    const loginRes = await fetch("https://apps.animekita.org/api/v1.2.5/model/login.php", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "content-type": "text/plain; charset=utf-8",
+        "user-agent": "Dart/3.9 (dart:io)"
+      },
+      body: JSON.stringify({
+        "user": "Gemini Tujuh",
+        "email": "geminitujuh00019@gmail.com",
+        "profil": "https://lh3.googleusercontent.com/a/ACg8ocKDmEYbdtB76hv6loaY5Ead7kx-Dw7JndSqUqbuaxRcUrU5ng=s96-c"
+      })
+    });
+
+    if (!loginRes.ok) {
+      return NextResponse.json({ error: "Gagal login ke AnimeKita" }, { status: loginRes.status });
     }
 
-    const html = await res.text();
-    const $ = cheerio.load(html);
+    const loginData = await loginRes.json();
+    const token = loginData.data?.[0]?.token;
 
-    // Extract first player link parameters
-    const $link = $('.player-type-link').eq(0);
-    if (!$link.length) {
+    if (!token) {
+      return NextResponse.json({ error: "Gagal mendapatkan token autentikasi" }, { status: 500 });
+    }
+
+    // 2. Parse episode number from ID (e.g., al-154132-1 -> episode 1)
+    const episodeNum = id.split("-").pop() || "1";
+
+    // 3. Fetch episode streams
+    const streamRes = await fetch(`https://apps.animekita.org/api/v1.2.5/series/episode/data.php?url=${id}`, {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "content-type": "text/plain; charset=utf-8",
+        "user-agent": "Flutter/2.5.3"
+      },
+      body: JSON.stringify({
+        "post_type": "2",
+        "post_id": id,
+        "series_id": "",
+        "series_url": "",
+        "episode": episodeNum,
+        "token": token
+      })
+    });
+
+    if (!streamRes.ok) {
+      return NextResponse.json({ error: "Gagal mengambil data streaming dari AnimeKita" }, { status: streamRes.status });
+    }
+
+    const streamData = await streamRes.json();
+    const info = streamData.data?.[0];
+
+    if (!info || !info.streams) {
       return NextResponse.json({ error: "Video stream tidak tersedia" }, { status: 404 });
     }
 
-    const type = $link.data('type') || 'hianime';
-    const enc1 = $link.data('encrypted-url1') || '';
-    const enc2 = $link.data('encrypted-url2') || '';
-    const enc3 = $link.data('encrypted-url3') || '';
-    const subtitle = $link.data('subtitle') || '';
-    const key = $link.data('key') || '';
+    // 4. Map streams
+    const sources = [];
+    const resolutions = ["1080p", "720p", "480p", "360p"];
 
-    // Find postId
-    let postId = '11224'; // Fallback default
-    const scriptText = $('script').map((i, el) => $(el).html()).get().join(' ');
-    const matchPostId = scriptText.match(/defaultPostId\s*=\s*['"](\d+)['"]/);
-    if (matchPostId) {
-      postId = matchPostId[1];
-    } else {
-      const matchPostId2 = html.match(/postId\s*:\s*['"](\d+)['"]/);
-      if (matchPostId2) postId = matchPostId2[1];
+    for (const reso of resolutions) {
+      const streamList = info.streams[reso] || [];
+      // Prefer animekita storage links as they are direct MP4 streams, fallback to others like pixeldrain
+      const directStream = streamList.find(s => s.link.includes("animekita.org")) || streamList[0];
+      if (directStream && directStream.link) {
+        sources.push({
+          url: directStream.link,
+          quality: reso,
+          isM3U8: directStream.link.includes(".m3u8")
+        });
+      }
     }
 
-    // Build the 9animetv embed player URL
-    const params = new URLSearchParams();
-    params.set(type, enc1);
-    if (enc2) params.set('url2', enc2);
-    if (enc3) params.set('url3', enc3);
-    params.set('feature_image', 'https://i0.wp.com/gogoanime.by/wp-content/uploads/2025/02/naruto-shippuuden.webp');
-    params.set('user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115 Safari/537.36');
-    params.set('ref', 'gogoanime.by');
-    params.set('subtitle', subtitle);
-    params.set('key', key);
-    params.set('postId', postId);
+    if (sources.length === 0) {
+      return NextResponse.json({ error: "Tidak ada link streaming video yang valid" }, { status: 404 });
+    }
 
-    const playerUrl = `https://9animetv.be/wp-content/plugins/video-player/includes/player/player.php?${params.toString()}`;
-
-    return NextResponse.json({
-      sources: [
-        {
-          url: playerUrl,
-          isM3U8: false
-        }
-      ]
-    });
+    return NextResponse.json({ sources });
   } catch (error) {
     console.error("Stream API Error:", error);
     return NextResponse.json({ error: "Gagal mengambil link streaming" }, { status: 500 });
