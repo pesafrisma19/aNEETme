@@ -82,10 +82,14 @@ export async function GET(request) {
       // Prefer animekita storage links, fallback to pixeldrain
       const directStream = streamList.find(s => s.link.includes("animekita.org")) || streamList[0];
       if (directStream && directStream.link) {
-        // Route every video URL through our server-side proxy
-        const proxiedUrl = `/api/proxy?url=${encodeURIComponent(directStream.link)}`;
+        // Only route pixeldrain.com through our proxy to save Vercel serverless bandwidth.
+        // Direct animekita.org storage links play fine without proxying.
+        const finalUrl = directStream.link.includes("pixeldrain.com")
+          ? `/api/proxy?url=${encodeURIComponent(directStream.link)}`
+          : directStream.link;
+
         sources.push({
-          url: proxiedUrl,
+          url: finalUrl,
           quality: reso,
           isM3U8: directStream.link.includes(".m3u8")
         });
