@@ -73,17 +73,19 @@ export async function GET(request) {
       return NextResponse.json({ error: "Video stream tidak tersedia" }, { status: 404 });
     }
 
-    // 4. Map streams
+    // 4. Map streams — wrap ALL urls through our proxy to avoid sec-fetch-site: cross-site blocking
     const sources = [];
     const resolutions = ["1080p", "720p", "480p", "360p"];
 
     for (const reso of resolutions) {
       const streamList = info.streams[reso] || [];
-      // Prefer animekita storage links as they are direct MP4 streams, fallback to others
+      // Prefer animekita storage links, fallback to pixeldrain
       const directStream = streamList.find(s => s.link.includes("animekita.org")) || streamList[0];
       if (directStream && directStream.link) {
+        // Route every video URL through our server-side proxy
+        const proxiedUrl = `/api/proxy?url=${encodeURIComponent(directStream.link)}`;
         sources.push({
-          url: directStream.link,
+          url: proxiedUrl,
           quality: reso,
           isM3U8: directStream.link.includes(".m3u8")
         });
@@ -94,13 +96,7 @@ export async function GET(request) {
       return NextResponse.json({ error: "Tidak ada link streaming video yang valid" }, { status: 404 });
     }
 
-    // 5. Prioritize direct animekita links & filter out pixeldrain links if we have direct links
-    const hasDirectSource = sources.some(s => s.url.includes("animekita.org"));
-    const finalSources = hasDirectSource 
-      ? sources.filter(s => !s.url.includes("pixeldrain.com")) 
-      : sources;
-
-    return NextResponse.json({ sources: finalSources });
+    return NextResponse.json({ sources });
   } catch (error) {
     console.error("Stream API Error:", error);
     return NextResponse.json({ error: "Gagal mengambil link streaming" }, { status: 500 });
