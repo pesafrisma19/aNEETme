@@ -32,7 +32,7 @@ export default function AnimeDetail() {
   const toggleBookmark = () => {
     if (!anime) return;
     const bookmarks = JSON.parse(localStorage.getItem("aneetme-bookmarks") || "[]");
-    
+
     let updatedBookmarks;
     if (isBookmarked) {
       updatedBookmarks = bookmarks.filter((b) => b.id !== animeId);
@@ -123,8 +123,8 @@ export default function AnimeDetail() {
         {/* Left Side: Poster & Bookmark */}
         <div className="details-poster" style={{ width: "100%", maxWidth: "260px", display: "flex", flexDirection: "column", gap: "20px", position: "relative", zIndex: 1 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img 
-            src={anime.image} 
+          <img
+            src={anime.image}
             alt={anime.title}
             style={{
               width: "100%",
@@ -135,11 +135,11 @@ export default function AnimeDetail() {
               boxShadow: "var(--shadow-glow)"
             }}
           />
-          
+
           {/* Bookmark Button */}
-          <button 
+          <button
             onClick={toggleBookmark}
-            className="btn" 
+            className="btn"
             style={{
               background: isBookmarked ? "var(--accent-pink)" : "rgba(255,255,255,0.05)",
               color: isBookmarked ? "#fff" : "var(--foreground-primary)",
@@ -157,11 +157,11 @@ export default function AnimeDetail() {
           <span className="badge badge-cyan" style={{ marginBottom: "12px" }}>
             {anime.type || "ANIME"}
           </span>
-          
+
           <h1 style={{ fontSize: "2.2rem", marginBottom: "8px", lineHeight: 1.2 }}>
             {anime.title}
           </h1>
-          
+
           {anime.otherName && (
             <p style={{ color: "var(--foreground-muted)", fontSize: "0.95rem", marginBottom: "20px" }}>
               Nama Lain: {anime.otherName}
@@ -195,7 +195,7 @@ export default function AnimeDetail() {
           {anime.genres && anime.genres.length > 0 && (
             <div className="details-genres" style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "24px" }}>
               {anime.genres.map((genre) => (
-                <span 
+                <span
                   key={genre}
                   style={{
                     fontSize: "0.8rem",
@@ -248,7 +248,7 @@ export default function AnimeDetail() {
 
           {/* Sort Control */}
           <div style={{ display: "flex", gap: "8px" }}>
-            <button 
+            <button
               onClick={() => setEpisodeFilter("asc")}
               style={{
                 background: episodeFilter === "asc" ? "var(--bg-tertiary)" : "transparent",
@@ -263,7 +263,7 @@ export default function AnimeDetail() {
             >
               Terlama
             </button>
-            <button 
+            <button
               onClick={() => setEpisodeFilter("desc")}
               style={{
                 background: episodeFilter === "desc" ? "var(--bg-tertiary)" : "transparent",
@@ -293,7 +293,7 @@ export default function AnimeDetail() {
             gap: "12px"
           }}>
             {episodes.map((ep) => (
-              <Link 
+              <Link
                 key={ep.id}
                 href={`/watch/${encodeURIComponent(ep.id)}?anime=${encodeURIComponent(animeId)}`}
                 className="episode-btn"

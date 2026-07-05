@@ -366,7 +366,7 @@ export default function Home() {
       </div>
 
       {/* Main Tab Render Logic */}
-      
+
       {/* 1. SEARCH RESULTS TAB */}
       {submittedQuery && (
         <section>
@@ -414,7 +414,7 @@ export default function Home() {
       {/* 2. HOME TAB (Default lists) */}
       {!submittedQuery && activeTab === "home" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
-          
+
           {selectedGenre ? (
             /* Genre Filter Results */
             <section>
@@ -422,9 +422,9 @@ export default function Home() {
                 <h2 style={{ fontSize: "1.6rem" }}>
                   Genre: <span className="gradient-text">{genresList.find(g => g.slug === selectedGenre)?.name}</span>
                 </h2>
-                <button 
-                  onClick={() => setSelectedGenre("")} 
-                  className="btn btn-secondary" 
+                <button
+                  onClick={() => setSelectedGenre("")}
+                  className="btn btn-secondary"
                   style={{ padding: "6px 14px", fontSize: "0.85rem" }}
                 >
                   Tutup Filter
@@ -432,7 +432,7 @@ export default function Home() {
               </div>
 
               {genreError && <p style={{ color: "red", marginTop: "10px" }}>Gagal memuat anime untuk genre ini.</p>}
-              
+
               {genreLoading && allGenreAnime.length === 0 && (
                 <div className="anime-grid">
                   {[...Array(12)].map((_, i) => (
@@ -454,15 +454,15 @@ export default function Home() {
                       />
                     ))}
                   </div>
-                  
+
                   {hasMoreGenre && (
                     <div style={{ display: "flex", justifyContent: "center", marginTop: "32px" }}>
-                      <button 
-                        onClick={loadMoreGenre} 
-                        className="btn btn-primary" 
+                      <button
+                        onClick={loadMoreGenre}
+                        className="btn btn-primary"
                         disabled={genreLoading}
-                        style={{ 
-                          padding: "12px 36px", 
+                        style={{
+                          padding: "12px 36px",
                           fontWeight: 600,
                           fontSize: "0.95rem",
                           borderRadius: "var(--border-radius-sm)"
@@ -489,9 +489,9 @@ export default function Home() {
                 <h2 style={{ fontSize: "1.6rem", display: "flex", alignItems: "center", gap: "10px" }}>
                   🆕 Episode Baru <span className="gradient-text">Rilis</span>
                 </h2>
-                
+
                 {recentError && <p style={{ color: "red", marginTop: "10px" }}>Gagal memuat episode terbaru.</p>}
-                
+
                 {recentLoading && allRecentAnime.length === 0 && (
                   <div className="anime-grid">
                     {[...Array(12)].map((_, i) => (
@@ -514,15 +514,15 @@ export default function Home() {
                         />
                       ))}
                     </div>
-                    
+
                     {hasMoreRecent && (
                       <div style={{ display: "flex", justifyContent: "center", marginTop: "32px" }}>
-                        <button 
-                          onClick={loadMoreRecent} 
-                          className="btn btn-primary" 
+                        <button
+                          onClick={loadMoreRecent}
+                          className="btn btn-primary"
                           disabled={recentLoading}
-                          style={{ 
-                            padding: "12px 36px", 
+                          style={{
+                            padding: "12px 36px",
                             fontWeight: 600,
                             fontSize: "0.95rem",
                             borderRadius: "var(--border-radius-sm)"
@@ -541,9 +541,9 @@ export default function Home() {
                 <h2 style={{ fontSize: "1.6rem", display: "flex", alignItems: "center", gap: "10px" }}>
                   🔥 Sedang <span className="gradient-text-purple">Airing Populer</span>
                 </h2>
-                
+
                 {topError && <p style={{ color: "red", marginTop: "10px" }}>Gagal memuat anime populer.</p>}
-                
+
                 {!topAnime && !topError && (
                   <div className="anime-grid">
                     {[...Array(6)].map((_, i) => (
