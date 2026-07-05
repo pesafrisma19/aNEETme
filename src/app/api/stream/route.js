@@ -79,7 +79,7 @@ export async function GET(request) {
 
     for (const reso of resolutions) {
       const streamList = info.streams[reso] || [];
-      // Prefer animekita storage links as they are direct MP4 streams, fallback to others like pixeldrain
+      // Prefer animekita storage links as they are direct MP4 streams, fallback to others
       const directStream = streamList.find(s => s.link.includes("animekita.org")) || streamList[0];
       if (directStream && directStream.link) {
         sources.push({
@@ -94,7 +94,13 @@ export async function GET(request) {
       return NextResponse.json({ error: "Tidak ada link streaming video yang valid" }, { status: 404 });
     }
 
-    return NextResponse.json({ sources });
+    // 5. Prioritize direct animekita links & filter out pixeldrain links if we have direct links
+    const hasDirectSource = sources.some(s => s.url.includes("animekita.org"));
+    const finalSources = hasDirectSource 
+      ? sources.filter(s => !s.url.includes("pixeldrain.com")) 
+      : sources;
+
+    return NextResponse.json({ sources: finalSources });
   } catch (error) {
     console.error("Stream API Error:", error);
     return NextResponse.json({ error: "Gagal mengambil link streaming" }, { status: 500 });
