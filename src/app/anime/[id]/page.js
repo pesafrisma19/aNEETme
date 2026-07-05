@@ -97,7 +97,7 @@ export default function AnimeDetail() {
       </div>
 
       {/* Main Info Box */}
-      <section className="glass" style={{
+      <section className="glass details-box" style={{
         padding: "30px",
         borderRadius: "var(--border-radius-lg)",
         marginBottom: "40px",
@@ -121,7 +121,7 @@ export default function AnimeDetail() {
         }} />
 
         {/* Left Side: Poster & Bookmark */}
-        <div style={{ width: "100%", maxWidth: "260px", display: "flex", flexDirection: "column", gap: "20px", position: "relative", zIndex: 1 }}>
+        <div className="details-poster" style={{ width: "100%", maxWidth: "260px", display: "flex", flexDirection: "column", gap: "20px", position: "relative", zIndex: 1 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
             src={anime.image} 
@@ -153,7 +153,7 @@ export default function AnimeDetail() {
         </div>
 
         {/* Right Side: Metadata Details */}
-        <div style={{ flex: 1, minWidth: "300px", position: "relative", zIndex: 1 }}>
+        <div className="details-info" style={{ flex: 1, minWidth: "300px", position: "relative", zIndex: 1 }}>
           <span className="badge badge-cyan" style={{ marginBottom: "12px" }}>
             {anime.type || "ANIME"}
           </span>
@@ -169,7 +169,7 @@ export default function AnimeDetail() {
           )}
 
           {/* Details Pill Row */}
-          <div style={{
+          <div className="details-pills" style={{
             display: "flex",
             flexWrap: "wrap",
             gap: "12px",
@@ -193,7 +193,7 @@ export default function AnimeDetail() {
 
           {/* Genres */}
           {anime.genres && anime.genres.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "24px" }}>
+            <div className="details-genres" style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "24px" }}>
               {anime.genres.map((genre) => (
                 <span 
                   key={genre}

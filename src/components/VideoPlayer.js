@@ -75,6 +75,23 @@ export default function VideoPlayer({ url, qualities, title, ...option }) {
       },
     });
 
+    // Auto-rotate / Lock screen orientation to landscape on Fullscreen
+    art.on("fullscreen", async (state) => {
+      try {
+        if (state) {
+          if (screen.orientation && screen.orientation.lock) {
+            await screen.orientation.lock("landscape");
+          }
+        } else {
+          if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          }
+        }
+      } catch (err) {
+        console.warn("Gagal mengubah orientasi layar:", err);
+      }
+    });
+
     return () => {
       if (art && art.destroy) {
         art.destroy(false);

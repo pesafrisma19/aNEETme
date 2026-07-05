@@ -222,3 +222,129 @@ h1, h2, h3, h4, h5, h6 {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
 }
+
+/* Premium Tabs & Navigation Controls */
+.tabs-container {
+  display: flex;
+  padding: 4px;
+  border-radius: 50px;
+  background: rgba(19, 19, 26, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  gap: 4px;
+}
+
+.tab-btn {
+  background: transparent;
+  color: var(--foreground-secondary);
+  border: none;
+  padding: 10px 24px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: var(--transition-smooth);
+}
+
+.tab-btn:hover {
+  color: var(--foreground-primary);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-pink) 100%);
+  color: #000;
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.25);
+}
+
+.genre-select-dropdown {
+  padding: 10px 36px 10px 18px;
+  border-radius: 50px !important;
+  background: rgba(19, 19, 26, 0.6) !important;
+  color: var(--foreground-primary) !important;
+  border: 1px solid var(--glass-border) !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  appearance: none;
+  outline: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: var(--transition-smooth);
+  backdrop-filter: blur(12px);
+}
+
+.genre-select-dropdown:hover {
+  border-color: var(--accent-cyan) !important;
+}
+
+/* Global Mobile Responsiveness Updates */
+@media (max-width: 768px) {
+  .tabs-row-container {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 16px !important;
+  }
+  
+  .tabs-container-wrapper {
+    flex-direction: column !important;
+    width: 100% !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .tabs-container {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .tab-btn {
+    flex: 1;
+    text-align: center;
+    padding: 10px 8px;
+    font-size: 0.8rem;
+  }
+
+  .genre-select-wrapper {
+    width: 100%;
+  }
+
+  .genre-select-dropdown {
+    width: 100% !important;
+    text-align: center;
+  }
+
+  .search-form {
+    max-width: 100% !important;
+    width: 100%;
+  }
+  
+  /* Details Page responsive adjustments */
+  .details-box {
+    padding: 20px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 24px !important;
+  }
+  
+  .details-poster {
+    max-width: 200px !important;
+    margin: 0 auto !important;
+  }
+  
+  .details-info {
+    text-align: center !important;
+    width: 100% !important;
+  }
+  
+  .details-pills {
+    justify-content: center !important;
+  }
+  
+  .details-genres {
+    justify-content: center !important;
+  }
+}
+

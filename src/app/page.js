@@ -271,7 +271,7 @@ export default function Home() {
       )}
 
       {/* Tabs & Search Bar Row */}
-      <div style={{
+      <div className="tabs-row-container" style={{
         display: "flex",
         flexWrap: "wrap",
         justifyContent: "space-between",
@@ -280,30 +280,14 @@ export default function Home() {
         marginBottom: "32px"
       }}>
         {/* Tab & Filter Container */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "center" }}>
+        <div className="tabs-container-wrapper" style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "center" }}>
           {/* Tab Buttons */}
-          <div className="glass" style={{
-            display: "flex",
-            padding: "4px",
-            borderRadius: "var(--border-radius-sm)",
-            border: "1px solid var(--glass-border)",
-          }}>
+          <div className="tabs-container">
             {["home", "bookmarks", "history"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => handleTabChange(tab)}
-                style={{
-                  background: activeTab === tab ? "var(--accent-cyan)" : "transparent",
-                  color: activeTab === tab ? "#000" : "var(--foreground-secondary)",
-                  border: "none",
-                  padding: "8px 20px",
-                  borderRadius: "calc(var(--border-radius-sm) - 4px)",
-                  fontWeight: 600,
-                  fontSize: "0.9rem",
-                  cursor: "pointer",
-                  textTransform: "capitalize",
-                  transition: "var(--transition-smooth)"
-                }}
+                className={`tab-btn ${activeTab === tab ? "active" : ""}`}
               >
                 {tab === "home" ? "Utama" : tab === "bookmarks" ? "Favorit" : "Riwayat"}
               </button>
@@ -312,23 +296,11 @@ export default function Home() {
 
           {/* Genre Dropdown Filter */}
           {activeTab === "home" && !submittedQuery && (
-            <div style={{ position: "relative" }}>
+            <div className="genre-select-wrapper" style={{ position: "relative" }}>
               <select
                 value={selectedGenre}
                 onChange={(e) => setSelectedGenre(e.target.value)}
-                style={{
-                  padding: "8px 32px 8px 16px",
-                  borderRadius: "var(--border-radius-sm)",
-                  background: "var(--bg-secondary)",
-                  color: "var(--foreground-primary)",
-                  border: "1px solid var(--glass-border)",
-                  fontSize: "0.9rem",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  appearance: "none",
-                  outline: "none",
-                  transition: "var(--transition-smooth)"
-                }}
+                className="genre-select-dropdown"
               >
                 {genresList.map((g) => (
                   <option key={g.slug} value={g.slug} style={{ background: "var(--bg-primary)" }}>
@@ -339,7 +311,7 @@ export default function Home() {
               {/* Custom Down Arrow Icon */}
               <span style={{
                 position: "absolute",
-                right: "12px",
+                right: "16px",
                 top: "50%",
                 transform: "translateY(-50%)",
                 pointerEvents: "none",
@@ -353,7 +325,7 @@ export default function Home() {
         </div>
 
         {/* Search Input Form */}
-        <form onSubmit={handleSearchSubmit} style={{
+        <form onSubmit={handleSearchSubmit} className="search-form" style={{
           display: "flex",
           gap: "8px",
           flex: 1,
