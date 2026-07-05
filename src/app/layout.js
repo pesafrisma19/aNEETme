@@ -5,6 +5,7 @@ export const metadata = {
   title: "aNEETme - Premium Anime Streaming Client",
   description: "Nonton Anime Online Subtitle Indonesia gratis, kualitas HD, cepat dan tanpa iklan pop-up mengganggu.",
   keywords: ["anime", "nonton anime", "streaming anime", "sub indo", "anime sub indo", "ad-free anime"],
+  referrer: "no-referrer",
 };
 
 export default function RootLayout({ children }) {
