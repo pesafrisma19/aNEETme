@@ -10,9 +10,8 @@ export async function GET(request) {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
   try {
-    // If it's a genre query
+    // 1. If it's a genre query
     if (genre) {
-      // Ensure genre parameter ends with a slash (e.g. action/)
       const genreSlug = genre.endsWith("/") ? genre : `${genre}/`;
       const url = `https://apps.animekita.org/api/v1.2.5/genreseries.php?page=${page}&url=${encodeURIComponent(genreSlug.toLowerCase())}`;
       
@@ -30,16 +29,16 @@ export async function GET(request) {
       const items = await res.json();
       
       const results = items.map((item) => ({
-        id: item.link, // In genreseries.php, the slug is in the 'link' property
-        title: item.anime_name, // In genreseries.php, it's 'anime_name'
-        image: item.thumb, // In genreseries.php, it's 'thumb'
+        id: item.link ? (item.link.endsWith("/") ? item.link.slice(0, -1) : item.link) : "",
+        title: item.anime_name,
+        image: item.thumb,
         releaseDate: item.status || ""
       }));
 
       return NextResponse.json({ results });
     }
 
-    // If it's a search query
+    // 2. If it's a search query
     if (query) {
       const url = `https://apps.animekita.org/api/v1.2.5/search.php?keyword=${encodeURIComponent(query)}&page=${page}&per_page=30`;
       const res = await fetch(url, {
@@ -57,7 +56,7 @@ export async function GET(request) {
       const items = json.data?.[0]?.result || [];
 
       const results = items.map((item) => ({
-        id: item.url,
+        id: item.url ? (item.url.endsWith("/") ? item.url.slice(0, -1) : item.url) : "",
         title: item.judul,
         image: item.cover,
         releaseDate: item.status || ""
@@ -66,7 +65,57 @@ export async function GET(request) {
       return NextResponse.json(results);
     }
 
-    // If it is the home/ongoing updates feed
+    // 3. Movie Feed (movie.php)
+    if (type === "movie") {
+      const url = `https://apps.animekita.org/api/v1.2.5/movie.php?page=${page}`;
+      const res = await fetch(url, {
+        headers: {
+          "accept": "application/json",
+          "user-agent": "Dart/3.9 (dart:io)"
+        }
+      });
+
+      if (!res.ok) {
+        return NextResponse.json({ error: "Gagal memuat data movie" }, { status: res.status });
+      }
+
+      const items = await res.json();
+      const results = items.map((item) => ({
+        id: item.url ? (item.url.endsWith("/") ? item.url.slice(0, -1) : item.url) : "",
+        title: item.judul,
+        image: item.cover,
+        releaseDate: item.lastup || ""
+      }));
+
+      return NextResponse.json({ results });
+    }
+
+    // 4. Recommendation Feed (rekomendasi.php)
+    if (type === "recommend") {
+      const url = `https://apps.animekita.org/api/v1.2.5/rekomendasi.php?page=${page}`;
+      const res = await fetch(url, {
+        headers: {
+          "accept": "application/json",
+          "user-agent": "Dart/3.9 (dart:io)"
+        }
+      });
+
+      if (!res.ok) {
+        return NextResponse.json({ error: "Gagal memuat data rekomendasi" }, { status: res.status });
+      }
+
+      const items = await res.json();
+      const results = items.map((item) => ({
+        id: item.url ? (item.url.endsWith("/") ? item.url.slice(0, -1) : item.url) : "",
+        title: item.judul,
+        image: item.cover,
+        releaseDate: item.score ? `★ ${item.score}` : (item.rilis || "")
+      }));
+
+      return NextResponse.json({ results });
+    }
+
+    // 5. Recent/Ongoing updates feed (home/ongoing.php)
     if (type === "recent" || !type) {
       const url = `https://apps.animekita.org/api/v1.2.5/home/ongoing.php?page=${page}&type=anime`;
       const res = await fetch(url, {
@@ -80,14 +129,12 @@ export async function GET(request) {
         return NextResponse.json({ error: "Gagal memuat data ongoing" }, { status: res.status });
       }
 
-      // The ongoing.php endpoint returns a direct JSON array, not wrapped in { data: [...] }
       const items = await res.json();
 
       const results = items.map((item) => {
-        // Clean episode number (e.g. "Ep 37" -> "37")
         const epNum = item.lastch ? item.lastch.replace(/Ep\s*/i, "") : "";
         return {
-          id: item.url,
+          id: item.url ? (item.url.endsWith("/") ? item.url.slice(0, -1) : item.url) : "",
           title: item.judul,
           image: item.cover,
           releaseDate: item.lastup || "",
@@ -98,37 +145,9 @@ export async function GET(request) {
       return NextResponse.json({ results });
     }
 
-    // If it is the popular/top list
-    if (type === "top") {
-      // Use search with a popular keyword like 'tensei' to get hot hits for top list
-      const url = `https://apps.animekita.org/api/v1.2.5/search.php?keyword=tensei&page=1&per_page=15`;
-      const res = await fetch(url, {
-        headers: {
-          "accept": "application/json",
-          "user-agent": "Dart/3.9 (dart:io)"
-        }
-      });
-
-      if (!res.ok) {
-        return NextResponse.json({ error: "Gagal memuat data top anime" }, { status: res.status });
-      }
-
-      const json = await res.json();
-      const items = json.data?.[0]?.result || [];
-
-      const results = items.map((item) => ({
-        id: item.url,
-        title: item.judul,
-        image: item.cover,
-        releaseDate: item.status || ""
-      }));
-
-      return NextResponse.json({ results });
-    }
-
     return NextResponse.json({ results: [] });
   } catch (error) {
-    console.error("Search/Genre API Error:", error);
+    console.error("Search/Browse API Error:", error);
     return NextResponse.json({ error: "Gagal memuat data dari server" }, { status: 500 });
   }
 }

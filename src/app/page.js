@@ -148,11 +148,127 @@ export default function Home() {
     }
   };
 
-  // Fetch top airing
-  const { data: topAnime, error: topError } = useSWR(
-    activeTab === "home" && !submittedQuery && !selectedGenre ? "/api/search?type=top" : null,
-    fetcher
-  );
+  const [homeFeed, setHomeFeed] = useState("recent"); // recent, movie, recommend
+
+  // Movie feed states
+  const [moviePage, setMoviePage] = useState(1);
+  const [allMovieAnime, setAllMovieAnime] = useState([]);
+  const [movieLoading, setMovieLoading] = useState(false);
+  const [movieError, setMovieError] = useState(null);
+  const [hasMoreMovie, setHasMoreMovie] = useState(true);
+
+  // Recommend feed states
+  const [recommendPage, setRecommendPage] = useState(1);
+  const [allRecommendAnime, setAllRecommendAnime] = useState([]);
+  const [recommendLoading, setRecommendLoading] = useState(false);
+  const [recommendError, setRecommendError] = useState(null);
+  const [hasMoreRecommend, setHasMoreRecommend] = useState(true);
+
+  // Fetch movie list
+  useEffect(() => {
+    if (activeTab === "home" && !submittedQuery && !selectedGenre && homeFeed === "movie") {
+      setMoviePage(1);
+      setMovieLoading(true);
+      setMovieError(null);
+      setHasMoreMovie(true);
+
+      fetch("/api/search?type=movie&page=1")
+        .then((res) => {
+          if (!res.ok) throw new Error("Gagal memuat film bioskop");
+          return res.json();
+        })
+        .then((data) => {
+          setAllMovieAnime(data.results || []);
+          if ((data.results || []).length < 20) {
+            setHasMoreMovie(false);
+          }
+        })
+        .catch((err) => {
+          setMovieError(err.message);
+        })
+        .finally(() => {
+          setMovieLoading(false);
+        });
+    }
+  }, [activeTab, submittedQuery, selectedGenre, homeFeed]);
+
+  const loadMoreMovie = async () => {
+    if (movieLoading || !hasMoreMovie) return;
+    setMovieLoading(true);
+    const nextPage = moviePage + 1;
+    try {
+      const res = await fetch(`/api/search?type=movie&page=${nextPage}`);
+      if (!res.ok) throw new Error("Gagal memuat film berikutnya");
+      const data = await res.json();
+      const newItems = data.results || [];
+      if (newItems.length > 0) {
+        setAllMovieAnime((prev) => [...prev, ...newItems]);
+        setMoviePage(nextPage);
+        if (newItems.length < 20) {
+          setHasMoreMovie(false);
+        }
+      } else {
+        setHasMoreMovie(false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setMovieLoading(false);
+    }
+  };
+
+  // Fetch recommended list
+  useEffect(() => {
+    if (activeTab === "home" && !submittedQuery && !selectedGenre && homeFeed === "recommend") {
+      setRecommendPage(1);
+      setRecommendLoading(true);
+      setRecommendError(null);
+      setHasMoreRecommend(true);
+
+      fetch("/api/search?type=recommend&page=1")
+        .then((res) => {
+          if (!res.ok) throw new Error("Gagal memuat rekomendasi");
+          return res.json();
+        })
+        .then((data) => {
+          setAllRecommendAnime(data.results || []);
+          if ((data.results || []).length < 20) {
+            setHasMoreRecommend(false);
+          }
+        })
+        .catch((err) => {
+          setRecommendError(err.message);
+        })
+        .finally(() => {
+          setRecommendLoading(false);
+        });
+    }
+  }, [activeTab, submittedQuery, selectedGenre, homeFeed]);
+
+  const loadMoreRecommend = async () => {
+    if (recommendLoading || !hasMoreRecommend) return;
+    setRecommendLoading(true);
+    const nextPage = recommendPage + 1;
+    try {
+      const res = await fetch(`/api/search?type=recommend&page=${nextPage}`);
+      if (!res.ok) throw new Error("Gagal memuat rekomendasi berikutnya");
+      const data = await res.json();
+      const newItems = data.results || [];
+      if (newItems.length > 0) {
+        setAllRecommendAnime((prev) => [...prev, ...newItems]);
+        setRecommendPage(nextPage);
+        if (newItems.length < 20) {
+          setHasMoreRecommend(false);
+        }
+      } else {
+        setHasMoreRecommend(false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setRecommendLoading(false);
+    }
+  };
 
   // Fetch search results
   const { data: searchResults, error: searchError, isValidating: searchLoading } = useSWR(
@@ -194,6 +310,7 @@ export default function Home() {
     setSubmittedQuery("");
     setSearchVal("");
     setSelectedGenre(""); // Reset genre filter
+    setHomeFeed("recent"); // Reset sub-tab
     // Update URL query parameter silently
     const newUrl = tabName === "home" ? "/" : `/?tab=${tabName}`;
     window.history.pushState({ path: newUrl }, "", newUrl);
@@ -212,6 +329,7 @@ export default function Home() {
       setSubmittedQuery(searchVal.trim());
       setActiveTab("home");
       setSelectedGenre(""); // Reset genre filter when searching
+      setHomeFeed("recent"); // Reset sub-tab
     }
   };
 
@@ -219,6 +337,7 @@ export default function Home() {
     setSearchVal("");
     setSubmittedQuery("");
     setSelectedGenre(""); // Reset genre filter
+    setHomeFeed("recent"); // Reset sub-tab
   };
 
   return (
@@ -482,92 +601,192 @@ export default function Home() {
               )}
             </section>
           ) : (
-            /* Default lists (Recent & Top Airing) */
+            /* Default lists (Recent, Movie, Recommendation Sub-tabs) */
             <>
-              {/* Recent Episodes */}
-              <section>
-                <h2 style={{ fontSize: "1.6rem", display: "flex", alignItems: "center", gap: "10px" }}>
-                  🆕 Episode Baru <span className="gradient-text">Rilis</span>
-                </h2>
+              {/* Sub-tab feed selector */}
+              <div style={{
+                display: "flex",
+                gap: "12px",
+                borderBottom: "1px solid var(--glass-border)",
+                paddingBottom: "12px",
+                marginBottom: "8px",
+                flexWrap: "wrap"
+              }}>
+                {[
+                  { id: "recent", name: "🆕 Episode Terbaru", color: "var(--accent-cyan)" },
+                  { id: "movie", name: "🎬 Film Bioskop", color: "var(--accent-pink)" },
+                  { id: "recommend", name: "🌟 Rekomendasi Pilihan", color: "var(--accent-purple)" }
+                ].map((feed) => (
+                  <button
+                    key={feed.id}
+                    onClick={() => setHomeFeed(feed.id)}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      padding: "8px 16px",
+                      fontSize: "0.95rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      color: homeFeed === feed.id ? "#fff" : "var(--foreground-muted)",
+                      borderBottom: homeFeed === feed.id ? `3px solid ${feed.color}` : "3px solid transparent",
+                      transition: "var(--transition-smooth)",
+                      textShadow: homeFeed === feed.id ? `0 0 10px ${feed.color}` : "none"
+                    }}
+                  >
+                    {feed.name}
+                  </button>
+                ))}
+              </div>
 
-                {recentError && <p style={{ color: "red", marginTop: "10px" }}>Gagal memuat episode terbaru.</p>}
+              {/* FEED 1: RECENT EPISODES */}
+              {homeFeed === "recent" && (
+                <section>
+                  {recentError && <p style={{ color: "red", marginTop: "10px" }}>Gagal memuat episode terbaru.</p>}
 
-                {recentLoading && allRecentAnime.length === 0 && (
-                  <div className="anime-grid">
-                    {[...Array(12)].map((_, i) => (
-                      <div key={i} className="shimmer" style={{ width: "100%", aspectRatio: "2/3", borderRadius: "var(--border-radius-md)" }} />
-                    ))}
-                  </div>
-                )}
-
-                {allRecentAnime.length > 0 && (
-                  <>
+                  {recentLoading && allRecentAnime.length === 0 && (
                     <div className="anime-grid">
-                      {allRecentAnime.map((anime) => (
-                        <AnimeCard
-                          key={anime.id}
-                          id={anime.id}
-                          title={anime.title}
-                          image={anime.image}
-                          episodeNumber={anime.episodeNumber}
-                          releaseDate={anime.releaseDate}
-                        />
+                      {[...Array(12)].map((_, i) => (
+                        <div key={i} className="shimmer" style={{ width: "100%", aspectRatio: "2/3", borderRadius: "var(--border-radius-md)" }} />
                       ))}
                     </div>
+                  )}
 
-                    {hasMoreRecent && (
-                      <div style={{ display: "flex", justifyContent: "center", marginTop: "32px" }}>
-                        <button
-                          onClick={loadMoreRecent}
-                          className="btn btn-primary"
-                          disabled={recentLoading}
-                          style={{
-                            padding: "12px 36px",
-                            fontWeight: 600,
-                            fontSize: "0.95rem",
-                            borderRadius: "var(--border-radius-sm)"
-                          }}
-                        >
-                          {recentLoading ? "Memuat..." : "Muat Lebih Banyak"}
-                        </button>
+                  {allRecentAnime.length > 0 && (
+                    <>
+                      <div className="anime-grid">
+                        {allRecentAnime.map((anime) => (
+                          <AnimeCard
+                            key={anime.id}
+                            id={anime.id}
+                            title={anime.title}
+                            image={anime.image}
+                            episodeNumber={anime.episodeNumber}
+                            releaseDate={anime.releaseDate}
+                          />
+                        ))}
                       </div>
-                    )}
-                  </>
-                )}
-              </section>
 
-              {/* Top Airing Anime */}
-              <section>
-                <h2 style={{ fontSize: "1.6rem", display: "flex", alignItems: "center", gap: "10px" }}>
-                  🔥 Sedang <span className="gradient-text-purple">Airing Populer</span>
-                </h2>
+                      {hasMoreRecent && (
+                        <div style={{ display: "flex", justifyContent: "center", marginTop: "32px" }}>
+                          <button
+                            onClick={loadMoreRecent}
+                            className="btn btn-primary"
+                            disabled={recentLoading}
+                            style={{
+                              padding: "12px 36px",
+                              fontWeight: 600,
+                              fontSize: "0.95rem",
+                              borderRadius: "var(--border-radius-sm)"
+                            }}
+                          >
+                            {recentLoading ? "Memuat..." : "Muat Lebih Banyak"}
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </section>
+              )}
 
-                {topError && <p style={{ color: "red", marginTop: "10px" }}>Gagal memuat anime populer.</p>}
+              {/* FEED 2: MOVIES */}
+              {homeFeed === "movie" && (
+                <section>
+                  {movieError && <p style={{ color: "red", marginTop: "10px" }}>Gagal memuat film bioskop.</p>}
 
-                {!topAnime && !topError && (
-                  <div className="anime-grid">
-                    {[...Array(6)].map((_, i) => (
-                      <div key={i} className="shimmer" style={{ width: "100%", aspectRatio: "2/3", borderRadius: "var(--border-radius-md)" }} />
-                    ))}
-                  </div>
-                )}
+                  {movieLoading && allMovieAnime.length === 0 && (
+                    <div className="anime-grid">
+                      {[...Array(12)].map((_, i) => (
+                        <div key={i} className="shimmer" style={{ width: "100%", aspectRatio: "2/3", borderRadius: "var(--border-radius-md)" }} />
+                      ))}
+                    </div>
+                  )}
 
-                {topAnime && (
-                  <div className="anime-grid">
-                    {topAnime.results?.map((anime) => (
-                      <AnimeCard
-                        key={anime.id}
-                        id={anime.id}
-                        title={anime.title}
-                        image={anime.image}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
+                  {allMovieAnime.length > 0 && (
+                    <>
+                      <div className="anime-grid">
+                        {allMovieAnime.map((anime) => (
+                          <AnimeCard
+                            key={anime.id}
+                            id={anime.id}
+                            title={anime.title}
+                            image={anime.image}
+                            releaseDate={anime.releaseDate}
+                          />
+                        ))}
+                      </div>
+
+                      {hasMoreMovie && (
+                        <div style={{ display: "flex", justifyContent: "center", marginTop: "32px" }}>
+                          <button
+                            onClick={loadMoreMovie}
+                            className="btn btn-primary"
+                            disabled={movieLoading}
+                            style={{
+                              padding: "12px 36px",
+                              fontWeight: 600,
+                              fontSize: "0.95rem",
+                              borderRadius: "var(--border-radius-sm)"
+                            }}
+                          >
+                            {movieLoading ? "Memuat..." : "Muat Lebih Banyak"}
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </section>
+              )}
+
+              {/* FEED 3: RECOMMENDATIONS */}
+              {homeFeed === "recommend" && (
+                <section>
+                  {recommendError && <p style={{ color: "red", marginTop: "10px" }}>Gagal memuat rekomendasi.</p>}
+
+                  {recommendLoading && allRecommendAnime.length === 0 && (
+                    <div className="anime-grid">
+                      {[...Array(12)].map((_, i) => (
+                        <div key={i} className="shimmer" style={{ width: "100%", aspectRatio: "2/3", borderRadius: "var(--border-radius-md)" }} />
+                      ))}
+                    </div>
+                  )}
+
+                  {allRecommendAnime.length > 0 && (
+                    <>
+                      <div className="anime-grid">
+                        {allRecommendAnime.map((anime) => (
+                          <AnimeCard
+                            key={anime.id}
+                            id={anime.id}
+                            title={anime.title}
+                            image={anime.image}
+                            releaseDate={anime.releaseDate}
+                          />
+                        ))}
+                      </div>
+
+                      {hasMoreRecommend && (
+                        <div style={{ display: "flex", justifyContent: "center", marginTop: "32px" }}>
+                          <button
+                            onClick={loadMoreRecommend}
+                            className="btn btn-primary"
+                            disabled={recommendLoading}
+                            style={{
+                              padding: "12px 36px",
+                              fontWeight: 600,
+                              fontSize: "0.95rem",
+                              borderRadius: "var(--border-radius-sm)"
+                            }}
+                          >
+                            {recommendLoading ? "Memuat..." : "Muat Lebih Banyak"}
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </section>
+              )}
             </>
           )}
-
         </div>
       )}
 
