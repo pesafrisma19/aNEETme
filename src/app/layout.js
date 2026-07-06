@@ -39,34 +39,6 @@ export default function RootLayout({ children }) {
                 aNEETme
               </span>
             </Link>
-
-            {/* Nav Menu */}
-            <nav style={{ display: "flex", gap: "24px" }}>
-              <Link href="/" style={{
-                fontWeight: 500,
-                fontSize: "0.95rem",
-                color: "var(--foreground-primary)",
-                transition: "var(--transition-smooth)"
-              }} className="nav-link">
-                Home
-              </Link>
-              <Link href="/?tab=bookmarks" style={{
-                fontWeight: 500,
-                fontSize: "0.95rem",
-                color: "var(--foreground-secondary)",
-                transition: "var(--transition-smooth)"
-              }} className="nav-link">
-                Bookmarks
-              </Link>
-              <Link href="/?tab=history" style={{
-                fontWeight: 500,
-                fontSize: "0.95rem",
-                color: "var(--foreground-secondary)",
-                transition: "var(--transition-smooth)"
-              }} className="nav-link">
-                History
-              </Link>
-            </nav>
           </div>
         </header>
 

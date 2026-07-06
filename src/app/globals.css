@@ -280,8 +280,45 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--accent-cyan) !important;
 }
 
+/* Hero Banner Styling */
+.hero-banner {
+  padding: 40px;
+  border-radius: var(--border-radius-lg);
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glow);
+  background: linear-gradient(135deg, rgba(19, 19, 26, 0.8) 0%, rgba(11, 11, 15, 0.9) 100%);
+}
+
+.hero-banner h1 {
+  font-size: 2.8rem;
+  margin-bottom: 16px;
+  line-height: 1.15;
+  font-weight: 800;
+}
+
+.hero-banner p {
+  font-size: 1rem;
+  color: var(--foreground-secondary);
+  line-height: 1.6;
+}
+
 /* Global Mobile Responsiveness Updates */
 @media (max-width: 768px) {
+  .hero-banner {
+    padding: 24px 20px !important;
+    margin-bottom: 24px !important;
+    border-radius: var(--border-radius-md) !important;
+  }
+  .hero-banner h1 {
+    font-size: 1.7rem !important;
+  }
+  .hero-banner p {
+    font-size: 0.85rem !important;
+  }
+
   .tabs-row-container {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -337,6 +374,7 @@ h1, h2, h3, h4, h5, h6 {
   .details-info {
     text-align: center !important;
     width: 100% !important;
+    min-width: unset !important; /* Fix right-side text cutoff */
   }
   
   .details-pills {

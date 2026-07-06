@@ -344,19 +344,12 @@ export default function Home() {
     <div className="container">
       {/* Banner / Hero Section */}
       {!submittedQuery && activeTab === "home" && (
-        <section className="glass" style={{
-          padding: "40px",
-          borderRadius: "var(--border-radius-lg)",
-          marginBottom: "40px",
-          position: "relative",
-          overflow: "hidden",
-          border: "1px solid var(--glass-border)",
-          boxShadow: "var(--shadow-glow)"
-        }}>
+        <section className="hero-banner">
           {/* Decorative Glow */}
           <div style={{
             position: "absolute",
-            top: "-10%', right: '-10%'",
+            top: "-10%",
+            right: "-10%",
             width: "300px",
             height: "300px",
             borderRadius: "50%",
@@ -366,7 +359,8 @@ export default function Home() {
           }} />
           <div style={{
             position: "absolute",
-            bottom: "-10%', left: '-10%'",
+            bottom: "-10%",
+            left: "-10%",
             width: "250px",
             height: "250px",
             borderRadius: "50%",
@@ -379,10 +373,10 @@ export default function Home() {
             <span className="badge badge-cyan" style={{ marginBottom: "16px" }}>
               ✨ AD-FREE STREAMING
             </span>
-            <h1 style={{ fontSize: "2.8rem", marginBottom: "16px", lineHeight: "1.1" }}>
+            <h1>
               Nonton Anime Tanpa <span className="gradient-text">Iklan Mengganggu</span>
             </h1>
-            <p style={{ color: "var(--foreground-secondary)", lineHeight: 1.6, marginBottom: "24px" }}>
+            <p>
               Temukan ribuan judul anime terbaru dan terpopuler dengan server streaming cepat dan player video bersih. Nikmati tontonan bebas iklan pop-up!
             </p>
           </div>
