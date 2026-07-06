@@ -270,6 +270,48 @@ export default function Home() {
     }
   };
 
+  // Schedule states
+  const [scheduleData, setScheduleData] = useState([]);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [scheduleError, setScheduleError] = useState(null);
+  const [selectedDay, setSelectedDay] = useState("");
+
+  // Fetch weekly schedule
+  useEffect(() => {
+    if (activeTab === "schedule") {
+      setScheduleLoading(true);
+      setScheduleError(null);
+      
+      fetch("/api/schedule")
+        .then((res) => {
+          if (!res.ok) throw new Error("Gagal memuat jadwal rilis");
+          return res.json();
+        })
+        .then((data) => {
+          const days = data.data || [];
+          setScheduleData(days);
+
+          // Auto-select today's day name in Indonesian
+          const daysOfWeek = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+          const todayIndex = new Date().getDay();
+          const todayName = daysOfWeek[todayIndex];
+
+          const hasToday = days.some(d => d.day.toLowerCase() === todayName.toLowerCase());
+          if (hasToday) {
+            setSelectedDay(todayName);
+          } else if (days.length > 0) {
+            setSelectedDay(days[0].day);
+          }
+        })
+        .catch((err) => {
+          setScheduleError(err.message);
+        })
+        .finally(() => {
+          setScheduleLoading(false);
+        });
+    }
+  }, [activeTab]);
+
   // Fetch search results
   const { data: searchResults, error: searchError, isValidating: searchLoading } = useSWR(
     submittedQuery ? `/api/search?q=${encodeURIComponent(submittedQuery)}` : null,
@@ -396,13 +438,13 @@ export default function Home() {
         <div className="tabs-container-wrapper" style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "center" }}>
           {/* Tab Buttons */}
           <div className="tabs-container">
-            {["home", "bookmarks", "history"].map((tab) => (
+            {["home", "schedule", "bookmarks", "history"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => handleTabChange(tab)}
                 className={`tab-btn ${activeTab === tab ? "active" : ""}`}
               >
-                {tab === "home" ? "Utama" : tab === "bookmarks" ? "Favorit" : "Riwayat"}
+                {tab === "home" ? "Utama" : tab === "schedule" ? "Jadwal" : tab === "bookmarks" ? "Favorit" : "Riwayat"}
               </button>
             ))}
           </div>
@@ -782,6 +824,105 @@ export default function Home() {
             </>
           )}
         </div>
+      )}
+
+      {/* 2.5 JADWAL TAB */}
+      {!submittedQuery && activeTab === "schedule" && (
+        <section>
+          <h2 style={{ fontSize: "1.6rem", marginBottom: "8px" }}>
+            📅 Jadwal <span className="gradient-text">Rilis Mingguan</span>
+          </h2>
+          <p style={{ color: "var(--foreground-muted)", fontSize: "0.9rem", marginBottom: "24px" }}>
+            Update rilis terbaru terjadwal setiap hari.
+          </p>
+
+          {scheduleError && <p style={{ color: "red" }}>Gagal memuat jadwal rilis.</p>}
+
+          {scheduleLoading && scheduleData.length === 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "10px" }}>
+                {[...Array(7)].map((_, i) => (
+                  <div key={i} className="shimmer" style={{ width: "90px", height: "40px", borderRadius: "50px", flexShrink: 0 }} />
+                ))}
+              </div>
+              <div className="anime-grid">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="shimmer" style={{ width: "100%", aspectRatio: "2/3", borderRadius: "var(--border-radius-md)" }} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {scheduleData.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              {/* Day selector pills */}
+              <div 
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  overflowX: "auto",
+                  paddingBottom: "10px",
+                  scrollbarWidth: "none",
+                  msOverflowStyle: "none"
+                }} 
+                className="day-pills-container"
+              >
+                {scheduleData.map((d) => {
+                  const isActive = selectedDay.toLowerCase() === d.day.toLowerCase();
+                  return (
+                    <button
+                      key={d.day}
+                      onClick={() => setSelectedDay(d.day)}
+                      style={{
+                        background: isActive ? "var(--accent-cyan)" : "rgba(255, 255, 255, 0.03)",
+                        color: isActive ? "#000" : "var(--foreground-secondary)",
+                        border: "1px solid " + (isActive ? "rgba(6, 182, 212, 0.3)" : "var(--glass-border)"),
+                        padding: "8px 24px",
+                        borderRadius: "50px",
+                        fontWeight: 600,
+                        fontSize: "0.9rem",
+                        cursor: "pointer",
+                        transition: "var(--transition-smooth)",
+                        boxShadow: isActive ? "var(--shadow-glow)" : "none",
+                        whiteSpace: "nowrap",
+                        flexShrink: 0
+                      }}
+                    >
+                      {d.day}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* List of anime for active day */}
+              {(() => {
+                const activeDayObj = scheduleData.find(d => d.day.toLowerCase() === selectedDay.toLowerCase());
+                const list = activeDayObj ? activeDayObj.animeList || [] : [];
+                
+                if (list.length === 0) {
+                  return (
+                    <div className="glass" style={{ padding: "40px", textAlign: "center", borderRadius: "var(--border-radius-md)" }}>
+                      <p style={{ color: "var(--foreground-secondary)" }}>Tidak ada anime rilis untuk hari ini.</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="anime-grid">
+                    {list.map((anime) => (
+                      <AnimeCard
+                        key={anime.id}
+                        id={anime.link}
+                        title={anime.anime_name}
+                        image={anime.cover}
+                      />
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </section>
       )}
 
       {/* 3. BOOKMARKS TAB */}
