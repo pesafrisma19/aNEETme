@@ -43,8 +43,14 @@ const DramaboxProvider = {
   },
 
   async search(query, page = 1) {
-    // Return empty array to prevent TypeError in search route
-    return [];
+    // Lakukan pencarian lokal dari daftar homepage (karena API search asli butuh AES/Login)
+    try {
+      const recentList = await this.getRecent(1);
+      const lowerQuery = query.toLowerCase();
+      return recentList.filter(item => item.title.toLowerCase().includes(lowerQuery));
+    } catch (e) {
+      return [];
+    }
   },
 
   async getRecent(page = 1) {
