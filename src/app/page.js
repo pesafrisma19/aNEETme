@@ -64,7 +64,7 @@ export default function Home() {
           setRecentLoading(false);
         });
     }
-  }, [activeTab, submittedQuery, currentServer]);
+  }, [activeTab, submittedQuery, currentServer, isLoading]);
 
   const loadMoreRecent = async () => {
     if (recentLoading || !hasMoreRecent) return;
@@ -137,7 +137,7 @@ export default function Home() {
           setGenreLoading(false);
         });
     }
-  }, [selectedGenre, activeTab, submittedQuery, currentServer]);
+  }, [selectedGenre, activeTab, submittedQuery, currentServer, isLoading]);
 
   const loadMoreGenre = async () => {
     if (genreLoading || !hasMoreGenre) return;
