@@ -1,5 +1,6 @@
 import "./globals.css";
 import Link from "next/link";
+import ServerSelector from "@/components/ServerSelector";
 
 export const metadata = {
   title: "aNEETme - Premium Anime Streaming Client",
@@ -39,6 +40,9 @@ export default function RootLayout({ children }) {
                 aNEETme
               </span>
             </Link>
+            
+            {/* Server Selector */}
+            <ServerSelector />
           </div>
         </header>
 

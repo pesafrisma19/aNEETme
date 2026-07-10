@@ -6,6 +6,12 @@ export async function GET(request) {
   const type = searchParams.get("type");
   const genre = searchParams.get("genre");
   const page = searchParams.get("page") || "1";
+  const server = searchParams.get("server") || "sakura";
+
+  if (server !== "sakura") {
+    // Placeholder for other servers (dragon, dynasty, cinema)
+    return NextResponse.json({ results: [] });
+  }
 
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 

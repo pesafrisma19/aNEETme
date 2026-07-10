@@ -3,9 +3,15 @@ import { NextResponse } from "next/server";
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id"); // This is the url key (e.g. mushoku-ni-tensei-s3-sub-indo)
+  const server = searchParams.get("server") || "sakura";
 
   if (!id) {
     return NextResponse.json({ error: "Missing 'id' parameter" }, { status: 400 });
+  }
+
+  if (server !== "sakura") {
+    // Placeholder for other servers
+    return NextResponse.json({ error: "Server API belum tersedia" }, { status: 404 });
   }
 
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
