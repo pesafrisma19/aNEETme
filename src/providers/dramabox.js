@@ -40,7 +40,45 @@ const DramaboxProvider = {
     hasSearch: true,
     hasSchedule: false,
     recentLabel: "Terkini",
-    genres: []
+    genres: [
+      { name: "Cinta Pahit", slug: "449" },
+      { name: "Realitas", slug: "467" },
+      { name: "Nikah Dulu Cinta Belakangan", slug: "456" },
+      { name: "Kawin Kontrak", slug: "454" },
+      { name: "Naga", slug: "442" },
+      { name: "Orang Kuat", slug: "470" },
+      { name: "Salah Paham", slug: "466" },
+      { name: "CEO Wanita", slug: "464" },
+      { name: "Kelahiran Kembali", slug: "450" },
+      { name: "Reuni", slug: "459" },
+      { name: "Manis", slug: "448" },
+      { name: "Melawan Balik", slug: "462" },
+      { name: "Cinta Sejati", slug: "469" },
+      { name: "Dokter Dewa", slug: "430" },
+      { name: "Urban", slug: "427" },
+      { name: "Menantu Matrilineal", slug: "444" },
+      { name: "Kekuatan Super", slug: "433" },
+      { name: "Kebangkitan", slug: "429" },
+      { name: "Identitas Rahasia", slug: "441" },
+      { name: "Bayi", slug: "460" },
+      { name: "Orang Kecil", slug: "435" },
+      { name: "Misteri", slug: "434" },
+      { name: "Ahli Turun Gunung", slug: "437" },
+      { name: "Miliarder", slug: "440" },
+      { name: "Pernikahan Kilat", slug: "457" },
+      { name: "Wanita Tangguh", slug: "463" },
+      { name: "Pengkhianatan", slug: "445" },
+      { name: "Kebangkitan Warisan", slug: "436" },
+      { name: "Cinta Segitiga", slug: "461" },
+      { name: "Perjalanan Waktu", slug: "451" },
+      { name: "Kekasih Kontrak", slug: "455" },
+      { name: "Identitas Tersembunyi", slug: "453" },
+      { name: "Keluarga", slug: "689" },
+      { name: "Kembali Orang Kuat", slug: "438" },
+      { name: "Identitas Tertukar", slug: "452" },
+      { name: "Balas Dendam", slug: "458" },
+      { name: "Romansa", slug: "447" }
+    ]
   },
 
   async search(query, page = 1) {
@@ -81,6 +119,23 @@ const DramaboxProvider = {
       
       const records = json.pageProps?.recommends || [];
 
+      return records.map(item => ({
+        id: item.bookId,
+        title: item.bookName,
+        image: item.cover,
+        releaseDate: item.chapterCount ? `${item.chapterCount} Eps` : "",
+        playCount: item.playCount || 0
+      }));
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  },
+
+  async getGenre(genreId, page = 1) {
+    try {
+      const json = await fetchNextData(`in/browse/${genreId}.json?typeTwoId=${genreId}`);
+      const records = json.pageProps?.bookList || [];
       return records.map(item => ({
         id: item.bookId,
         title: item.bookName,
