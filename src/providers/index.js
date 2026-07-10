@@ -3,12 +3,14 @@ import animelovers from "./animelovers";
 import lk21 from "./lk21";
 import dramabox from "./dramabox";
 import otakudesu from "./otakudesu";
+import anichin from "./anichin";
 
 const providers = {
   animelovers,
   lk21,
   dramabox,
   otakudesu,
+  anichin,
 };
 
 export function getProvider(name) {
