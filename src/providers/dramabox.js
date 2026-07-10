@@ -42,6 +42,11 @@ const DramaboxProvider = {
     genres: []
   },
 
+  async search(query, page = 1) {
+    // Return empty array to prevent TypeError in search route
+    return [];
+  },
+
   async getRecent(page = 1) {
     try {
       const json = await fetchNextData('in.json');
