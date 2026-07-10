@@ -333,10 +333,11 @@ export default function Home() {
   }, [activeTab, currentServer]);
 
   // Fetch search results
-  const { data: searchResults, error: searchError, isValidating: searchLoading } = useSWR(
+  const { data: searchData, error: searchError, isValidating: searchLoading } = useSWR(
     submittedQuery ? `/api/search?server=${currentServer}&q=${encodeURIComponent(submittedQuery)}` : null,
     fetcher
   );
+  const searchResults = searchData?.results || null;
 
   // Read Bookmarks and History on client mount
   useEffect(() => {
