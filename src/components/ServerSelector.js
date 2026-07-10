@@ -31,7 +31,7 @@ export default function ServerSelector() {
     window.dispatchEvent(new Event("server-changed"));
   };
 
-  const activeServer = servers.find((s) => s.id === selectedServer) || servers[0];
+  const activeServer = servers.find((s) => s.id === selectedServer) || { name: "Memuat..." };
 
   return (
     <>
@@ -49,8 +49,7 @@ export default function ServerSelector() {
           boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
         }}
       >
-        <span>{activeServer.name.split(" ")[0]}</span> {/* Just the emoji */}
-        <span style={{ fontWeight: 600 }}>{activeServer.name.substring(3)}</span>
+        <span style={{ fontWeight: 600 }}>{activeServer.name}</span>
         <span style={{ fontSize: "0.7rem", marginLeft: "4px" }}>▼</span>
       </button>
 
