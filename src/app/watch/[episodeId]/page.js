@@ -61,7 +61,7 @@ export default function Watch() {
 
     // Find the current episode number
     const currentEpisodeObj = anime.episodes?.find((ep) => ep.id === episodeId);
-    const epNumber = currentEpisodeObj ? currentEpisodeObj.number : "Unknown";
+    const epNumber = currentEpisodeObj ? (currentEpisodeObj.episodeNumber || currentEpisodeObj.number) : "Unknown";
 
     const savedHistory = JSON.parse(localStorage.getItem("aneetme-history") || "[]");
     
@@ -99,7 +99,7 @@ export default function Watch() {
     }
   };
 
-  const currentEpNum = anime?.episodes?.[currentEpIndex]?.number ?? "";
+  const currentEpNum = anime?.episodes?.[currentEpIndex]?.episodeNumber || anime?.episodes?.[currentEpIndex]?.number || "";
 
   return (
     <div className="container">
@@ -234,7 +234,7 @@ export default function Watch() {
                 Kategori: {anime.type} | Status: {anime.status}
               </p>
               <p style={{ color: "var(--foreground-secondary)", fontSize: "0.95rem", lineHeight: 1.6, textAlign: "justify" }}>
-                {anime.description}
+                {anime.description || anime.synopsis || "Tidak ada deskripsi yang tersedia untuk anime ini."}
               </p>
             </div>
           )}
@@ -274,7 +274,7 @@ export default function Watch() {
                 <div key={i} className="shimmer" style={{ height: "45px", borderRadius: "6px", width: "100%" }} />
               ))
             ) : (
-              anime.episodes?.map((ep) => {
+              anime.episodes?.map((ep, index) => {
                 const isCurrent = ep.id === episodeId;
                 return (
                   <Link
@@ -296,7 +296,7 @@ export default function Watch() {
                     }}
                     className="episode-nav-item"
                   >
-                    <span>Episode {ep.number}</span>
+                    <span>Episode {ep.episodeNumber || ep.number || (index + 1)}</span>
                     {isCurrent && <span style={{ fontSize: "0.75rem", fontStyle: "italic" }}>Memutar</span>}
                   </Link>
                 );

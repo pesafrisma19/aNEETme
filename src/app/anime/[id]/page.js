@@ -232,7 +232,7 @@ export default function AnimeDetail() {
               fontSize: "0.95rem",
               textAlign: "justify"
             }}>
-              {anime.description || "Tidak ada deskripsi yang tersedia untuk anime ini."}
+              {anime.description || anime.synopsis || "Tidak ada deskripsi yang tersedia untuk anime ini."}
             </p>
           </div>
         </div>
