@@ -497,8 +497,11 @@ export default function Home() {
                 onChange={(e) => setSelectedGenre(e.target.value)}
                 className="genre-select-dropdown"
               >
+                <option value="" style={{ background: "var(--bg-primary)" }}>
+                  Semua Genre
+                </option>
                 {genresList.map((g) => (
-                  <option key={g.slug} value={g.slug} style={{ background: "var(--bg-primary)" }}>
+                  <option key={g.slug || g.id} value={g.slug || g.id} style={{ background: "var(--bg-primary)" }}>
                     {g.name}
                   </option>
                 ))}
@@ -615,7 +618,7 @@ export default function Home() {
             <section>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
                 <h2 style={{ fontSize: "1.6rem" }}>
-                  Genre: <span className="gradient-text">{genresList.find(g => g.slug === selectedGenre)?.name}</span>
+                  Genre: <span className="gradient-text">{genresList.find(g => (g.slug || g.id) === selectedGenre)?.name || selectedGenre}</span>
                 </h2>
                 <button
                   onClick={() => setSelectedGenre("")}
