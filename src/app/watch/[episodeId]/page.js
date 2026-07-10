@@ -20,15 +20,21 @@ export default function Watch() {
   const [activeServer, setActiveServer] = useState(0);
   const [currentServer, setCurrentServer] = useState("animelovers");
 
-  // Sync server state with localStorage
+  const urlServer = searchParams.get("server");
+
+  // Sync server state with localStorage or URL
   useEffect(() => {
-    const saved = localStorage.getItem("aneetme-server") || "animelovers";
-    setCurrentServer(saved);
+    if (urlServer) {
+      setCurrentServer(urlServer);
+    } else {
+      const saved = localStorage.getItem("aneetme-server") || "animelovers";
+      setCurrentServer(saved);
+    }
 
     const handleServerChange = (e) => setCurrentServer(e.detail);
     window.addEventListener("server-changed", handleServerChange);
     return () => window.removeEventListener("server-changed", handleServerChange);
-  }, []);
+  }, [urlServer]);
 
   // Fetch Streaming link
   const { data: streamData, error: streamError, isValidating: streamLoading } = useSWR(
@@ -80,6 +86,7 @@ export default function Watch() {
       animeImage: anime.image,
       episodeId,
       episodeNumber: epNumber,
+      server: currentServer,
       watchedAt: new Date().toISOString()
     };
 
@@ -99,7 +106,7 @@ export default function Watch() {
     if (targetEp) {
       // Reset player states
       setVideoUrl("");
-      router.push(`/watch/${encodeURIComponent(targetEp.id)}?anime=${encodeURIComponent(animeId)}`);
+      router.push(`/watch/${encodeURIComponent(targetEp.id)}?anime=${encodeURIComponent(animeId)}&server=${currentServer}`);
     }
   };
 
@@ -113,7 +120,7 @@ export default function Watch() {
         <span>/</span>
         {anime && (
           <>
-            <Link href={`/anime/${encodeURIComponent(animeId)}`} className="nav-back-link">
+            <Link href={`/anime/${encodeURIComponent(animeId)}?server=${currentServer}`} className="nav-back-link">
               {anime.title}
             </Link>
             <span>/</span>

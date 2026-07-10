@@ -692,9 +692,9 @@ export default function Home() {
                 flexWrap: "wrap"
               }}>
                 {[
-                  { id: "recent", name: "🆕 Terkini", color: "var(--accent-cyan)", required: "hasRecent" },
-                  { id: "movie", name: "🎬 Film Bioskop", color: "var(--accent-pink)", required: "hasMovies" },
-                  { id: "recommend", name: "🌟 Rekomendasi Pilihan", color: "var(--accent-purple)", required: "hasRecommendations" }
+                  { id: "recent", name: `🆕 ${currentProviderConfig.capabilities?.recentLabel || "Terkini"}`, color: "var(--accent-cyan)", required: "hasRecent" },
+                  { id: "movie", name: `🎬 ${currentProviderConfig.capabilities?.moviesLabel || "Film Bioskop"}`, color: "var(--accent-pink)", required: "hasMovies" },
+                  { id: "recommend", name: `🌟 ${currentProviderConfig.capabilities?.recommendationsLabel || "Rekomendasi Pilihan"}`, color: "var(--accent-purple)", required: "hasRecommendations" }
                 ].filter(feed => currentProviderConfig.capabilities?.[feed.required])
                 .map((feed) => (
                   <button
@@ -998,6 +998,7 @@ export default function Home() {
                   id={anime.id}
                   title={anime.title}
                   image={anime.image}
+                  server={anime.server || "animelovers"}
                 />
               ))}
             </div>
@@ -1050,6 +1051,7 @@ export default function Home() {
                     id={item.animeId}
                     title={item.animeTitle}
                     image={item.animeImage}
+                    server={item.server || "animelovers"}
                   />
                   <div style={{
                     marginTop: "8px",

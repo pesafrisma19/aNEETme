@@ -13,6 +13,9 @@ const AnimeloversProvider = {
     hasRecent: true,
     hasSearch: true,
     hasSchedule: true,
+    recentLabel: "Terkini",
+    moviesLabel: "Film Bioskop",
+    recommendationsLabel: "Rekomendasi Pilihan",
     genres: [
       { name: "Semua Genre", slug: "" },
       { name: "Action", slug: "action" },

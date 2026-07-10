@@ -35,10 +35,11 @@ const DramaboxProvider = {
   
   capabilities: {
     hasMovies: false,
-    hasRecommendations: true,
+    hasRecommendations: false,
     hasRecent: true,
-    hasSearch: false, // Sementara false sampai kita pakai AES
+    hasSearch: true,
     hasSchedule: false,
+    recentLabel: "Terkini",
     genres: []
   },
 

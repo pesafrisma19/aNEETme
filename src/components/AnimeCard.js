@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-export default function AnimeCard({ id, title, image, episodeNumber, releaseDate, subOrDub }) {
+export default function AnimeCard({ id, title, image, episodeNumber, releaseDate, subOrDub, server }) {
   // If id is not formatted, make sure it is safe
-  const animeLink = `/anime/${encodeURIComponent(id)}`;
+  const animeLink = `/anime/${encodeURIComponent(id)}${server ? `?server=${server}` : ""}`;
 
   return (
     <Link href={animeLink} style={{ textDecoration: "none", color: "inherit" }}>

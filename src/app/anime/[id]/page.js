@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import useSWR from "swr";
 import Link from "next/link";
@@ -16,15 +16,23 @@ export default function AnimeDetail() {
   const [episodeFilter, setEpisodeFilter] = useState("asc"); // asc, desc
   const [currentServer, setCurrentServer] = useState("animelovers");
 
-  // Sync server state with localStorage
+  const searchParams = useSearchParams();
+  const urlServer = searchParams.get("server");
+
+  // Sync server state with localStorage or URL
   useEffect(() => {
-    const saved = localStorage.getItem("aneetme-server") || "animelovers";
-    setCurrentServer(saved);
+    if (urlServer) {
+      setCurrentServer(urlServer);
+      // We do not change localStorage here to avoid changing global server when just opening a bookmark
+    } else {
+      const saved = localStorage.getItem("aneetme-server") || "animelovers";
+      setCurrentServer(saved);
+    }
 
     const handleServerChange = (e) => setCurrentServer(e.detail);
     window.addEventListener("server-changed", handleServerChange);
     return () => window.removeEventListener("server-changed", handleServerChange);
-  }, []);
+  }, [urlServer]);
 
   // Fetch Anime details
   const { data: anime, error, isValidating: loading } = useSWR(
@@ -52,6 +60,7 @@ export default function AnimeDetail() {
         id: animeId,
         title: anime.title,
         image: anime.image,
+        server: currentServer,
         bookmarkedAt: new Date().toISOString()
       }];
     }
@@ -306,7 +315,7 @@ export default function AnimeDetail() {
             {episodes.map((ep, index) => (
               <Link
                 key={ep.id}
-                href={`/watch/${encodeURIComponent(ep.id)}?anime=${encodeURIComponent(animeId)}`}
+                href={`/watch/${encodeURIComponent(ep.id)}?anime=${encodeURIComponent(animeId)}&server=${currentServer}`}
                 className="episode-btn"
                 style={{
                   display: "flex",
