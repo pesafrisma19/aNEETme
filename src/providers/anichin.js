@@ -2,6 +2,13 @@ import * as cheerio from "cheerio";
 
 const ANICHIN_BASE = "https://anichin.watch";
 
+const HEADERS = {
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+  "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+  "Cache-Control": "no-cache"
+};
+
 const AnichinProvider = {
   id: 'anichin',
   name: 'Anichin',
@@ -57,7 +64,7 @@ const AnichinProvider = {
 
   async _parseList(url) {
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: HEADERS });
       const html = await res.text();
       const $ = cheerio.load(html);
       
@@ -102,7 +109,7 @@ const AnichinProvider = {
 
   async getInfo(id) {
     try {
-      const res = await fetch(`${ANICHIN_BASE}/donghua/${id}/`);
+      const res = await fetch(`${ANICHIN_BASE}/donghua/${id}/`, { headers: HEADERS });
       const html = await res.text();
       const $ = cheerio.load(html);
       
@@ -142,7 +149,7 @@ const AnichinProvider = {
   async getStream(id) {
     try {
       // id is episode slug
-      const res = await fetch(`${ANICHIN_BASE}/${id}/`);
+      const res = await fetch(`${ANICHIN_BASE}/${id}/`, { headers: HEADERS });
       const html = await res.text();
       const $ = cheerio.load(html);
       
