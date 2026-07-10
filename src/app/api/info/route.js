@@ -11,7 +11,7 @@ export async function GET(request) {
   }
 
   if (server === "cinema" || server === "dynasty") {
-    const baseUrl = server === "cinema" ? "https://d21.team" : "https://tv4.nontondrama.my";
+    const baseUrl = server === "cinema" ? "https://lk21.de" : "https://tv4.nontondrama.my";
     const targetUrl = `${baseUrl}/${id}`;
     
     const data = await scrapeLK21Info(targetUrl);

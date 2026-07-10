@@ -10,7 +10,7 @@ export async function GET(request) {
   const server = searchParams.get("server") || "sakura";
 
   if (server === "cinema" || server === "dynasty") {
-    let baseUrl = server === "cinema" ? "https://d21.team" : "https://tv4.nontondrama.my";
+    let baseUrl = server === "cinema" ? "https://lk21.de" : "https://tv4.nontondrama.my";
     let targetUrl = `${baseUrl}/latest`;
 
     if (query) {
