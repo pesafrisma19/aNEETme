@@ -34,12 +34,14 @@ const DramaboxProvider = {
   logo: 'https://play-lh.googleusercontent.com/97y_D0Vv5Xj81B80s3d4t6y3iXl3H47b-1-aV8xGvX8Y38KxVv86G1K43yP7b0zH',
   
   capabilities: {
-    hasMovies: false,
-    hasRecommendations: false,
+    hasMovies: true,
+    hasRecommendations: true,
     hasRecent: true,
     hasSearch: true,
     hasSchedule: false,
-    recentLabel: "Terkini",
+    recentLabel: "Wajib Ditonton",
+    moviesLabel: "Sedang Tren",
+    recommendationsLabel: "Serial Menarik",
     genres: [
       { name: "Cinta Pahit", slug: "449" },
       { name: "Realitas", slug: "467" },
@@ -92,44 +94,43 @@ const DramaboxProvider = {
     }
   },
 
-  async getRecent(page = 1) {
+  async getSmallDataList(index) {
     try {
-      const json = await fetchNextData('in.json');
-      const records = json.pageProps?.bigList || [];
+      const res = await fetch(`${DRAMABOX_BASE}/in`);
+      const html = await res.text();
+      const jsonMatch = html.match(/<script id="__NEXT_DATA__" type="application\/json">(.+?)<\/script>/);
+      if (!jsonMatch) return [];
       
-      return records.map(item => ({
-        id: item.bookId,
-        title: item.bookName,
-        image: item.cover,
-        releaseDate: item.chapterCount ? `${item.chapterCount} Eps` : "",
-        playCount: item.playCount || 0
-      }));
-    } catch (e) {
+      const json = JSON.parse(jsonMatch[1]);
+      const smallData = json.props?.pageProps?.smallData || [];
+      
+      if (smallData.length > index) {
+        const list = smallData[index].items || [];
+        return list.map(item => ({
+          id: item.bookId,
+          title: item.bookName,
+          image: item.cover,
+          releaseDate: item.shelfTime ? item.shelfTime.split(" ")[0] : "",
+          playCount: 0
+        }));
+      }
+      return [];
+    } catch(e) {
       console.error(e);
       return [];
     }
   },
 
-  async getRecommendations(page = 1) {
-    try {
-      // Ambil rekomendasi dari halaman episode statis (buku acak atau fallback)
-      const fallbackBookId = "41000104560";
-      const fallbackChapterId = "576077442";
-      const json = await fetchNextData(`in/episode/${fallbackBookId}/${fallbackChapterId}.json?bookId=${fallbackBookId}&chapterId=${fallbackChapterId}`);
-      
-      const records = json.pageProps?.recommends || [];
+  async getRecent(page = 1) {
+    return this.getSmallDataList(0);
+  },
 
-      return records.map(item => ({
-        id: item.bookId,
-        title: item.bookName,
-        image: item.cover,
-        releaseDate: item.chapterCount ? `${item.chapterCount} Eps` : "",
-        playCount: item.playCount || 0
-      }));
-    } catch (e) {
-      console.error(e);
-      return [];
-    }
+  async getMovies(page = 1) {
+    return this.getSmallDataList(1);
+  },
+
+  async getRecommendations(page = 1) {
+    return this.getSmallDataList(2);
   },
 
   async getGenre(genreId, page = 1) {
