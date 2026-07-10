@@ -6,7 +6,10 @@ import * as cheerio from 'cheerio';
  */
 export async function scrapeLK21List(url) {
   try {
-    const res = await fetch(url, { next: { revalidate: 3600 } }); // Cache for 1 hour
+    const res = await fetch(url, { 
+      headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
+      next: { revalidate: 3600 } 
+    });
     const html = await res.text();
     const $ = cheerio.load(html);
 
@@ -58,7 +61,10 @@ export async function scrapeLK21List(url) {
  */
 export async function scrapeLK21Info(url) {
   try {
-    const res = await fetch(url, { next: { revalidate: 3600 } });
+    const res = await fetch(url, { 
+      headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
+      next: { revalidate: 3600 } 
+    });
     const html = await res.text();
     const $ = cheerio.load(html);
 
