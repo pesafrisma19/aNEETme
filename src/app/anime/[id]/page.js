@@ -303,7 +303,7 @@ export default function AnimeDetail() {
             gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
             gap: "12px"
           }}>
-            {episodes.map((ep) => (
+            {episodes.map((ep, index) => (
               <Link
                 key={ep.id}
                 href={`/watch/${encodeURIComponent(ep.id)}?anime=${encodeURIComponent(animeId)}`}
@@ -324,7 +324,7 @@ export default function AnimeDetail() {
                   transition: "var(--transition-smooth)"
                 }}
               >
-                EP {ep.number}
+                EP {ep.episodeNumber || ep.number || (index + 1)}
               </Link>
             ))}
           </div>
