@@ -6,11 +6,10 @@ import * as cheerio from 'cheerio';
  */
 export async function scrapeLK21List(url) {
   try {
-    const res = await fetch(url, { 
-      headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
-      next: { revalidate: 3600 } 
-    });
-    const html = await res.text();
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const res = await fetch(proxyUrl, { next: { revalidate: 3600 } });
+    const json = await res.json();
+    const html = json.contents;
     const $ = cheerio.load(html);
 
     const results = [];
@@ -61,11 +60,10 @@ export async function scrapeLK21List(url) {
  */
 export async function scrapeLK21Info(url) {
   try {
-    const res = await fetch(url, { 
-      headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
-      next: { revalidate: 3600 } 
-    });
-    const html = await res.text();
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const res = await fetch(proxyUrl, { next: { revalidate: 3600 } });
+    const json = await res.json();
+    const html = json.contents;
     const $ = cheerio.load(html);
 
     const title = $('h1[itemprop="name"]').text().trim() || $('.title-wrapper h1').text().trim();
