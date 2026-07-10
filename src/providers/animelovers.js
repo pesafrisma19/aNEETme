@@ -103,8 +103,8 @@ const AnimeloversProvider = {
   },
 
   async getInfo(id) {
-    const slug = id.split("/").pop();
-    const cleanSlug = slug.replace(/-\d+$/, "");
+    const slug = id.split("/").filter(Boolean).pop();
+    const cleanSlug = slug.replace(/-episode-\d+.*$/i, "").replace(/-sub-indo$/i, "").replace(/-\d+$/, "");
     const url = `https://apps.animekita.org/api/v1.2.5/anime.php?id=${cleanSlug}`;
     
     const res = await fetch(url, { headers: { "accept": "application/json", "user-agent": "Dart/3.9 (dart:io)" } });
