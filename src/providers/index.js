@@ -1,10 +1,12 @@
 // src/providers/index.js
 import animelovers from "./animelovers";
 import lk21 from "./lk21";
+import dramabox from "./dramabox";
 
 const providers = {
   animelovers,
   lk21,
+  dramabox,
 };
 
 export function getProvider(name) {
