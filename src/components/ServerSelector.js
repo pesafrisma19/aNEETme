@@ -5,11 +5,14 @@ import { useState, useEffect } from "react";
 export default function ServerSelector() {
   const [showModal, setShowModal] = useState(false);
   const [selectedServer, setSelectedServer] = useState("animelovers");
+  const [servers, setServers] = useState([]);
 
-  const servers = [
-    { id: "animelovers", name: "AnimeLovers", desc: "Server khusus pencinta anime" },
-    { id: "lk21", name: "LK21", desc: "Film & Bioskop (Membutuhkan proxy/VPS)" }
-  ];
+  useEffect(() => {
+    fetch('/api/providers')
+      .then(res => res.json())
+      .then(data => setServers(data))
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     // Load from local storage on mount

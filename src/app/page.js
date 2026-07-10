@@ -96,21 +96,18 @@ export default function Home() {
   const [genreError, setGenreError] = useState(null);
   const [hasMoreGenre, setHasMoreGenre] = useState(true);
 
-  const genresList = [
-    { name: "Semua Genre", slug: "" },
-    { name: "Action", slug: "action" },
-    { name: "Adventure", slug: "adventure" },
-    { name: "Fantasy", slug: "fantasy" },
-    { name: "Romance", slug: "romance" },
-    { name: "Drama", slug: "drama" },
-    { name: "Comedy", slug: "comedy" },
-    { name: "Slice of Life", slug: "slice-of-life" },
-    { name: "Sci-Fi", slug: "sci-fi" },
-    { name: "Mystery", slug: "mystery" },
-    { name: "Supernatural", slug: "supernatural" },
-    { name: "School", slug: "school" },
-    { name: "Ecchi", slug: "ecchi" }
-  ];
+  const [providers, setProviders] = useState([]);
+  
+  useEffect(() => {
+    fetch('/api/providers')
+      .then(res => res.json())
+      .then(data => setProviders(data))
+      .catch(console.error);
+  }, []);
+
+  const currentProviderConfig = providers.find(p => p.id === currentServer) || { capabilities: { genres: [], hasMovies: true, hasRecommendations: true, hasRecent: true } };
+  const genresList = currentProviderConfig.capabilities?.genres || [];
+  const { hasMovies, hasRecommendations, hasRecent } = currentProviderConfig.capabilities || {};
 
   // Fetch genre anime with pagination
   useEffect(() => {
@@ -166,6 +163,12 @@ export default function Home() {
   };
 
   const [homeFeed, setHomeFeed] = useState("recent"); // recent, movie, recommend
+
+  useEffect(() => {
+    setActiveTab("home");
+    setHomeFeed("recent");
+    setSelectedGenre("");
+  }, [currentServer]);
 
   // Movie feed states
   const [moviePage, setMoviePage] = useState(1);
@@ -455,7 +458,12 @@ export default function Home() {
         <div className="tabs-container-wrapper" style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "center" }}>
           {/* Tab Buttons */}
           <div className="tabs-container">
-            {["home", "schedule", "bookmarks", "history"].map((tab) => (
+            {["home", "schedule", "bookmarks", "history"]
+              .filter(tab => {
+                if (tab === "schedule" && !currentProviderConfig.capabilities?.hasSchedule) return false;
+                return true;
+              })
+              .map((tab) => (
               <button
                 key={tab}
                 onClick={() => handleTabChange(tab)}
@@ -666,10 +674,11 @@ export default function Home() {
                 flexWrap: "wrap"
               }}>
                 {[
-                  { id: "recent", name: "🆕 Episode Terbaru", color: "var(--accent-cyan)" },
-                  { id: "movie", name: "🎬 Film Bioskop", color: "var(--accent-pink)" },
-                  { id: "recommend", name: "🌟 Rekomendasi Pilihan", color: "var(--accent-purple)" }
-                ].map((feed) => (
+                  { id: "recent", name: "🆕 Terkini", color: "var(--accent-cyan)", required: "hasRecent" },
+                  { id: "movie", name: "🎬 Film Bioskop", color: "var(--accent-pink)", required: "hasMovies" },
+                  { id: "recommend", name: "🌟 Rekomendasi Pilihan", color: "var(--accent-purple)", required: "hasRecommendations" }
+                ].filter(feed => currentProviderConfig.capabilities?.[feed.required])
+                .map((feed) => (
                   <button
                     key={feed.id}
                     onClick={() => setHomeFeed(feed.id)}

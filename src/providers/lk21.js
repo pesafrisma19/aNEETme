@@ -26,6 +26,30 @@ async function fetchHtml(url) {
 const LK21Provider = {
   id: 'lk21',
   name: 'LK21',
+  desc: 'Server Film & Live Action (Butuh Proxy/VPS)',
+
+  capabilities: {
+    hasMovies: true,
+    hasRecommendations: true,
+    hasRecent: true,
+    hasSearch: true,
+    hasSchedule: false,
+    genres: [
+      { name: "Semua Genre", slug: "" },
+      { name: "Action", slug: "action" },
+      { name: "Adventure", slug: "adventure" },
+      { name: "Animation", slug: "animation" },
+      { name: "Comedy", slug: "comedy" },
+      { name: "Crime", slug: "crime" },
+      { name: "Drama", slug: "drama" },
+      { name: "Family", slug: "family" },
+      { name: "Fantasy", slug: "fantasy" },
+      { name: "Horror", slug: "horror" },
+      { name: "Romance", slug: "romance" },
+      { name: "Sci-Fi", slug: "sci-fi" },
+      { name: "Thriller", slug: "thriller" }
+    ]
+  },
   
   async search(query, page = 1) {
     // Catatan: LK21 search saat ini rusak (membutuhkan bypass Cloudflare ke gudangvape.com)

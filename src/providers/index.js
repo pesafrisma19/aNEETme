@@ -10,3 +10,12 @@ const providers = {
 export function getProvider(name) {
   return providers[name] || null;
 }
+
+export function getAllProviders() {
+  return Object.values(providers).map(p => ({
+    id: p.id,
+    name: p.name,
+    desc: p.desc,
+    capabilities: p.capabilities
+  }));
+}

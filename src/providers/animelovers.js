@@ -4,6 +4,31 @@ import * as cheerio from 'cheerio';
 const AnimeloversProvider = {
   id: 'animelovers',
   name: 'AnimeLovers',
+  desc: 'Server khusus pencinta anime (Update Cepat)',
+  
+  capabilities: {
+    hasMovies: true,
+    hasRecommendations: true,
+    hasRecent: true,
+    hasSearch: true,
+    hasSchedule: true,
+    genres: [
+      { name: "Semua Genre", slug: "" },
+      { name: "Action", slug: "action" },
+      { name: "Adventure", slug: "adventure" },
+      { name: "Comedy", slug: "comedy" },
+      { name: "Drama", slug: "drama" },
+      { name: "Fantasy", slug: "fantasy" },
+      { name: "Isekai", slug: "isekai" },
+      { name: "Magic", slug: "magic" },
+      { name: "Mecha", slug: "mecha" },
+      { name: "Mystery", slug: "mystery" },
+      { name: "Romance", slug: "romance" },
+      { name: "Sci-Fi", slug: "sci-fi" },
+      { name: "Slice of Life", slug: "slice-of-life" },
+      { name: "Sports", slug: "sports" }
+    ]
+  },
   
   async search(query, page = 1) {
     const url = `https://apps.animekita.org/api/v1.2.5/search.php?keyword=${encodeURIComponent(query)}&page=${page}&per_page=30`;
