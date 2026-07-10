@@ -15,6 +15,7 @@ export default function Home() {
     // Initial load
     const saved = localStorage.getItem("aneetme-server") || "animelovers";
     setCurrentServer(saved);
+    setIsLoading(false);
 
     // Event listener
     const handleServerChange = () => {
@@ -38,6 +39,7 @@ export default function Home() {
 
   // Fetch recent episodes with pagination
   useEffect(() => {
+    if (isLoading) return;
     if (activeTab === "home" && !submittedQuery) {
       setRecentPage(1);
       setRecentLoading(true);
@@ -186,6 +188,7 @@ export default function Home() {
 
   // Fetch movie list
   useEffect(() => {
+    if (isLoading) return;
     if (activeTab === "home" && !submittedQuery && !selectedGenre && homeFeed === "movie") {
       setMoviePage(1);
       setMovieLoading(true);
@@ -210,7 +213,7 @@ export default function Home() {
           setMovieLoading(false);
         });
     }
-  }, [activeTab, submittedQuery, selectedGenre, homeFeed, currentServer]);
+  }, [activeTab, submittedQuery, selectedGenre, homeFeed, currentServer, isLoading]);
 
   const loadMoreMovie = async () => {
     if (movieLoading || !hasMoreMovie) return;
@@ -239,6 +242,7 @@ export default function Home() {
 
   // Fetch recommended list
   useEffect(() => {
+    if (isLoading) return;
     if (activeTab === "home" && !submittedQuery && !selectedGenre && homeFeed === "recommend") {
       setRecommendPage(1);
       setRecommendLoading(true);
@@ -263,7 +267,7 @@ export default function Home() {
           setRecommendLoading(false);
         });
     }
-  }, [activeTab, submittedQuery, selectedGenre, homeFeed, currentServer]);
+  }, [activeTab, submittedQuery, selectedGenre, homeFeed, currentServer, isLoading]);
 
   const loadMoreRecommend = async () => {
     if (recommendLoading || !hasMoreRecommend) return;
@@ -298,6 +302,7 @@ export default function Home() {
 
   // Fetch weekly schedule
   useEffect(() => {
+    if (isLoading) return;
     if (activeTab === "schedule") {
       setScheduleLoading(true);
       setScheduleError(null);
@@ -330,11 +335,11 @@ export default function Home() {
           setScheduleLoading(false);
         });
     }
-  }, [activeTab, currentServer]);
+  }, [activeTab, currentServer, isLoading]);
 
   // Fetch search results
   const { data: searchData, error: searchError, isValidating: searchLoading } = useSWR(
-    submittedQuery ? `/api/search?server=${currentServer}&q=${encodeURIComponent(submittedQuery)}` : null,
+    (!isLoading && submittedQuery) ? `/api/search?server=${currentServer}&q=${encodeURIComponent(submittedQuery)}` : null,
     fetcher
   );
   const searchResults = searchData?.results || null;
@@ -401,7 +406,16 @@ export default function Home() {
     setSubmittedQuery("");
     setSelectedGenre(""); // Reset genre filter
     setHomeFeed("recent"); // Reset sub-tab
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  if (isLoading) {
+    return (
+      <div style={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <p style={{ color: "var(--accent-cyan)", fontSize: "1.2rem", fontWeight: 600 }}>Memuat...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container">
