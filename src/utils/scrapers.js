@@ -6,7 +6,15 @@ import * as cheerio from 'cheerio';
  */
 export async function scrapeLK21List(url) {
   try {
-    const res = await fetch(url, { 
+    const apiKey = process.env.SCRAPER_API_KEY;
+    let targetFetchUrl = url;
+    
+    if (apiKey) {
+      // Use ScraperAPI if API key is provided
+      targetFetchUrl = `http://api.scraperapi.com/?api_key=${apiKey}&url=${encodeURIComponent(url)}`;
+    }
+
+    const res = await fetch(targetFetchUrl, { 
       headers: { 
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
@@ -73,7 +81,15 @@ export async function scrapeLK21List(url) {
  */
 export async function scrapeLK21Info(url) {
   try {
-    const res = await fetch(url, { 
+    const apiKey = process.env.SCRAPER_API_KEY;
+    let targetFetchUrl = url;
+    
+    if (apiKey) {
+      // Use ScraperAPI if API key is provided
+      targetFetchUrl = `http://api.scraperapi.com/?api_key=${apiKey}&url=${encodeURIComponent(url)}`;
+    }
+
+    const res = await fetch(targetFetchUrl, { 
       headers: { 
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
