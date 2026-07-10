@@ -104,8 +104,7 @@ const AnimeloversProvider = {
 
   async getInfo(id) {
     const slug = id.split("/").filter(Boolean).pop();
-    const cleanSlug = slug.replace(/-episode-\d+.*$/i, "").replace(/-sub-indo$/i, "").replace(/-\d+$/, "");
-    const url = `https://apps.animekita.org/api/v1.2.5/anime.php?id=${cleanSlug}`;
+    const url = `https://apps.animekita.org/api/v1.2.5/series.php?url=${slug}`;
     
     const res = await fetch(url, { headers: { "accept": "application/json", "user-agent": "Dart/3.9 (dart:io)" } });
     if (!res.ok) throw new Error("Gagal memuat detail dari server");
@@ -117,12 +116,12 @@ const AnimeloversProvider = {
     
     // Parse episodes
     const episodes = [];
-    if (json.list_episode && Array.isArray(json.list_episode)) {
-      json.list_episode.forEach((ep) => {
+    if (item.chapter && Array.isArray(item.chapter)) {
+      item.chapter.forEach((ep) => {
         episodes.push({
-          id: ep.link ? (ep.link.endsWith("/") ? ep.link.slice(0, -1) : ep.link) : "",
-          title: ep.title,
-          episodeNumber: ep.title.replace(/[^\d.]/g, "")
+          id: ep.url ? (ep.url.endsWith("/") ? ep.url.slice(0, -1) : ep.url) : "",
+          title: `Episode ${ep.ch}`,
+          episodeNumber: ep.ch
         });
       });
     }
@@ -132,32 +131,40 @@ const AnimeloversProvider = {
       image: item.cover,
       synopsis: item.sinopsis,
       status: item.status,
-      releaseDate: item.rilis,
-      genres: item.genre ? item.genre.split(',').map(g => g.trim()) : [],
+      releaseDate: item.published,
+      genres: item.genre || [],
       episodes: episodes
     };
   },
 
   async getStream(id) {
-    // Note: The original Sakura/Animelovers stream route scraped HTML to find the iframe
-    const url = id.startsWith("http") ? id : `https://anime-indo.biz/${id}`;
+    const slug = id.split("/").filter(Boolean).pop();
+    const url = `https://apps.animekita.org/api/v1.2.5/series/episode/data.php?url=${slug}`;
     
     const res = await fetch(url, {
-      headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+      headers: { "accept": "application/json", "user-agent": "Dart/3.9 (dart:io)" },
       next: { revalidate: 3600 }
     });
     
-    if (!res.ok) throw new Error("Gagal memuat halaman episode dari Anime-Indo");
+    if (!res.ok) throw new Error("Gagal memuat stream dari server");
     
-    const html = await res.text();
-    const $ = cheerio.load(html);
+    const json = await res.json();
+    if (!json.data || json.data.length === 0) throw new Error("Video tidak ditemukan");
     
-    const iframeSrc = $(".player-area iframe").attr("src");
-    if (!iframeSrc) throw new Error("Video tidak ditemukan (Mungkin diblokir atau error)");
+    const streams = json.data[0].streams;
+    let streamUrl = null;
+
+    if (streams) {
+      const hdLinks = streams["720p"] || streams["480p"] || streams["360p"] || [];
+      const bestLink = hdLinks.find(s => s.link && s.link.includes(".mp4")) || hdLinks[0];
+      if (bestLink) streamUrl = bestLink.link;
+    }
+    
+    if (!streamUrl) throw new Error("Video tidak ditemukan atau format tidak didukung");
 
     return {
-      iframeSrc,
-      streamUrl: null
+      iframeSrc: null,
+      streamUrl: streamUrl
     };
   }
 };
