@@ -27,6 +27,7 @@ const LK21Provider = {
   id: 'lk21',
   name: 'LK21',
   desc: 'Server Film & Live Action (Butuh Proxy/VPS)',
+  logo: 'https://www.google.com/s2/favicons?domain=lk21.de&sz=128',
 
   capabilities: {
     hasMovies: true,

@@ -81,14 +81,19 @@ export default function ServerSelector() {
               borderRadius: "16px",
               padding: "24px",
               width: "100%",
-              maxWidth: "400px",
+              maxWidth: "500px",
               boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
-              animation: "slideUp 0.3s ease-out",
+              animation: "slideUp 0.3s ease",
             }}
             onClick={(e) => e.stopPropagation()} // Prevent click from closing modal
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-              <h3 style={{ margin: 0, fontSize: "1.3rem" }}>Pilih Server</h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 700 }}>Pilih Platform</h3>
+                <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--foreground-muted)", marginTop: "4px" }}>
+                  {servers.length} platform tersedia
+                </p>
+              </div>
               <button
                 onClick={() => setShowModal(false)}
                 style={{
@@ -103,7 +108,7 @@ export default function ServerSelector() {
               </button>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: "12px", maxHeight: "60vh", overflowY: "auto", paddingRight: "4px" }}>
               {servers.map((server) => {
                 const isActive = selectedServer === server.id;
                 return (
@@ -113,34 +118,49 @@ export default function ServerSelector() {
                     style={{
                       display: "flex",
                       flexDirection: "column",
-                      alignItems: "flex-start",
-                      padding: "16px",
-                      background: isActive ? "rgba(6, 182, 212, 0.1)" : "rgba(255, 255, 255, 0.03)",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "16px 8px",
+                      background: isActive ? "rgba(6, 182, 212, 0.15)" : "rgba(255, 255, 255, 0.05)",
                       border: isActive ? "1px solid var(--accent-cyan)" : "1px solid var(--glass-border)",
-                      borderRadius: "12px",
+                      borderRadius: "16px",
                       cursor: "pointer",
                       transition: "all 0.2s ease",
-                      textAlign: "left",
+                      textAlign: "center",
+                      gap: "10px",
+                      position: "relative"
                     }}
                     onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
-                      }
+                      if (!isActive) e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
                     }}
                     onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
-                      }
+                      if (!isActive) e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
-                      <span style={{ fontSize: "1.1rem", fontWeight: 700, color: isActive ? "var(--accent-cyan)" : "#fff" }}>
-                        {server.name}
-                      </span>
-                      {isActive && <span style={{ color: "var(--accent-cyan)" }}>✓</span>}
+                    {isActive && (
+                      <div style={{ position: "absolute", top: "8px", right: "8px", width: "8px", height: "8px", borderRadius: "50%", background: "var(--accent-cyan)", boxShadow: "0 0 8px var(--accent-cyan)" }} />
+                    )}
+                    
+                    <div style={{ 
+                      width: "48px", 
+                      height: "48px", 
+                      borderRadius: "12px", 
+                      overflow: "hidden", 
+                      background: "rgba(0,0,0,0.5)", 
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: "0 4px 10px rgba(0,0,0,0.3)"
+                    }}>
+                       {server.logo ? (
+                         <img src={server.logo} alt={server.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                       ) : (
+                         <img src={`https://ui-avatars.com/api/?name=${server.name}&background=random&color=fff&size=128&bold=true`} alt={server.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                       )}
                     </div>
-                    <span style={{ fontSize: "0.85rem", color: "var(--foreground-muted)", marginTop: "4px" }}>
-                      {server.desc}
+
+                    <span style={{ fontSize: "0.8rem", fontWeight: 600, color: isActive ? "var(--accent-cyan)" : "#fff", lineHeight: 1.2 }}>
+                      {server.name}
                     </span>
                   </button>
                 );

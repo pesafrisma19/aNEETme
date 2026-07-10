@@ -5,6 +5,7 @@ const AnimeloversProvider = {
   id: 'animelovers',
   name: 'AnimeLovers',
   desc: 'Server khusus pencinta anime (Update Cepat)',
+  logo: 'https://www.google.com/s2/favicons?domain=animekita.org&sz=128',
   
   capabilities: {
     hasMovies: true,

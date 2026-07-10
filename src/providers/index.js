@@ -16,6 +16,7 @@ export function getAllProviders() {
     id: p.id,
     name: p.name,
     desc: p.desc,
+    logo: p.logo,
     capabilities: p.capabilities
   }));
 }
