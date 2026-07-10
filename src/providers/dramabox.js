@@ -32,7 +32,7 @@ const DramaboxProvider = {
   name: 'DramaBox',
   desc: 'Platform streaming drama pendek',
   logo: 'https://play-lh.googleusercontent.com/97y_D0Vv5Xj81B80s3d4t6y3iXl3H47b-1-aV8xGvX8Y38KxVv86G1K43yP7b0zH',
-  
+
   capabilities: {
     hasMovies: true,
     hasRecommendations: true,
@@ -94,43 +94,36 @@ const DramaboxProvider = {
     }
   },
 
-  async getSmallDataList(index) {
+  async getMoreDataList(endpoint, page) {
+    if (page > 1) return []; // The more endpoints only have 1 page of 18 items
+    
     try {
-      const res = await fetch(`${DRAMABOX_BASE}/in`);
-      const html = await res.text();
-      const jsonMatch = html.match(/<script id="__NEXT_DATA__" type="application\/json">(.+?)<\/script>/);
-      if (!jsonMatch) return [];
+      const json = await fetchNextData(`in/more/${endpoint}.json?position=${endpoint}`);
+      const list = json.pageProps?.moreData?.items || [];
       
-      const json = JSON.parse(jsonMatch[1]);
-      const smallData = json.props?.pageProps?.smallData || [];
-      
-      if (smallData.length > index) {
-        const list = smallData[index].items || [];
-        return list.map(item => ({
-          id: item.bookId,
-          title: item.bookName,
-          image: item.cover,
-          releaseDate: item.shelfTime ? item.shelfTime.split(" ")[0] : "",
-          playCount: 0
-        }));
-      }
-      return [];
-    } catch(e) {
+      return list.map(item => ({
+        id: item.bookId,
+        title: item.bookName,
+        image: item.cover,
+        releaseDate: item.shelfTime ? item.shelfTime.split(" ")[0] : "",
+        playCount: 0
+      }));
+    } catch (e) {
       console.error(e);
       return [];
     }
   },
 
   async getRecent(page = 1) {
-    return this.getSmallDataList(0);
+    return this.getMoreDataList("must-sees", page);
   },
 
   async getMovies(page = 1) {
-    return this.getSmallDataList(1);
+    return this.getMoreDataList("trending", page);
   },
 
   async getRecommendations(page = 1) {
-    return this.getSmallDataList(2);
+    return this.getMoreDataList("hidden-gems", page);
   },
 
   async getGenre(genreId, page = 1) {
@@ -157,16 +150,16 @@ const DramaboxProvider = {
       // kita butuh endpoint lain atau menggunakan chapter dummy yang me-redirect ke chapter 1.
       // Next.js _next/data/ membutuhkan chapterId. DramaBox biasanya punya struktur ini.
       // Untuk amannya, kita load web halamannya dulu untuk mengekstrak data JSON-nya secara langsung.
-      
+
       const res = await fetch(`${DRAMABOX_BASE}/in/film/${id}`, {
         headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" }
       });
       const html = await res.text();
-      
+
       // Ekstrak Next.js props dari halaman HTML
       const jsonMatch = html.match(/<script id="__NEXT_DATA__" type="application\/json">(.+?)<\/script>/);
       if (!jsonMatch) throw new Error("Tidak menemukan data Next.js");
-      
+
       const json = JSON.parse(jsonMatch[1]);
       const item = json.props?.pageProps?.bookInfo || {};
       const chapters = json.props?.pageProps?.chapterList || [];
@@ -195,12 +188,12 @@ const DramaboxProvider = {
     try {
       // ID dari aNEETme akan berbentuk "bookId/chapterId"
       const [bookId, chapterId] = id.split('/');
-      
+
       const json = await fetchNextData(`in/episode/${bookId}/${chapterId}.json?bookId=${bookId}&chapterId=${chapterId}`);
-      
+
       const chapters = json.pageProps?.chapterList || [];
       const currentCh = chapters.find(c => c.id === chapterId);
-      
+
       if (!currentCh || !currentCh.unlock || !currentCh.m3u8Url) {
         throw new Error("Episode berbayar atau tidak ditemukan");
       }
