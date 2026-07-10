@@ -46,11 +46,15 @@ export default function Watch() {
 
   // Parse stream sources when loaded
   useEffect(() => {
-    if (streamData && streamData.sources && streamData.sources.length > 0) {
-      // Look for default or highest quality m3u8 source
-      const m3u8Source = streamData.sources.find((s) => s.url.includes(".m3u8")) || streamData.sources[0];
-      if (m3u8Source) {
-        setVideoUrl(m3u8Source.url);
+    if (streamData) {
+      if (streamData.streamUrl) {
+        setVideoUrl(streamData.streamUrl);
+      } else if (streamData.sources && streamData.sources.length > 0) {
+        // Look for default or highest quality m3u8 source
+        const m3u8Source = streamData.sources.find((s) => s.url.includes(".m3u8")) || streamData.sources[0];
+        if (m3u8Source) {
+          setVideoUrl(m3u8Source.url);
+        }
       }
     }
   }, [streamData]);
