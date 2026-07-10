@@ -1,11 +1,30 @@
 import { NextResponse } from "next/server";
+import { scrapeLK21Info } from "@/utils/scrapers";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id"); // This is the url key (e.g. al-154132-1)
 
+  const server = searchParams.get("server") || "sakura";
+
   if (!id) {
     return NextResponse.json({ error: "Missing 'id' parameter" }, { status: 400 });
+  }
+
+  if (server === "cinema" || server === "dynasty") {
+    const baseUrl = server === "cinema" ? "https://d21.team" : "https://tv4.nontondrama.my";
+    const targetUrl = `${baseUrl}/${id}`;
+    
+    const data = await scrapeLK21Info(targetUrl);
+    if (!data || !data.iframeSrc) {
+      return NextResponse.json({ error: "Video tidak ditemukan di server ini" }, { status: 404 });
+    }
+
+    return NextResponse.json({ iframeSrc: data.iframeSrc });
+  }
+
+  if (server !== "sakura") {
+    return NextResponse.json({ error: "Server API belum tersedia" }, { status: 404 });
   }
 
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";

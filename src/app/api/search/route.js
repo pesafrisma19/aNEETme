@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { scrapeLK21List } from "@/utils/scrapers";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -8,8 +9,25 @@ export async function GET(request) {
   const page = searchParams.get("page") || "1";
   const server = searchParams.get("server") || "sakura";
 
+  if (server === "cinema" || server === "dynasty") {
+    let baseUrl = server === "cinema" ? "https://d21.team" : "https://tv4.nontondrama.my";
+    let targetUrl = `${baseUrl}/latest`;
+
+    if (query) {
+      targetUrl = `${baseUrl}/search/${encodeURIComponent(query)}`;
+    } else if (genre) {
+      targetUrl = `${baseUrl}/genre/${encodeURIComponent(genre.toLowerCase())}`;
+    }
+
+    if (page && parseInt(page) > 1) {
+      targetUrl += `/page/${page}`;
+    }
+
+    const results = await scrapeLK21List(targetUrl);
+    return NextResponse.json({ results });
+  }
+
   if (server !== "sakura") {
-    // Placeholder for other servers (dragon, dynasty, cinema)
     return NextResponse.json({ results: [] });
   }
 

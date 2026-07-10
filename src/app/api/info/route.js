@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { scrapeLK21Info } from "@/utils/scrapers";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -7,6 +8,34 @@ export async function GET(request) {
 
   if (!id) {
     return NextResponse.json({ error: "Missing 'id' parameter" }, { status: 400 });
+  }
+
+  if (server === "cinema" || server === "dynasty") {
+    const baseUrl = server === "cinema" ? "https://d21.team" : "https://tv4.nontondrama.my";
+    const targetUrl = `${baseUrl}/${id}`;
+    
+    const data = await scrapeLK21Info(targetUrl);
+    if (!data) {
+      return NextResponse.json({ error: "Failed to scrape info" }, { status: 500 });
+    }
+
+    // Map to expected format by the frontend
+    const results = {
+      title: data.title,
+      image: data.image,
+      synopsis: data.synopsis,
+      genres: data.details.genre ? data.details.genre.split(',').map(g => g.trim()) : [],
+      releaseDate: data.details.release || "",
+      status: "Ongoing",
+      type: data.episodes.length > 0 ? "series" : "movie",
+      episodes: data.episodes.map(ep => ({
+        title: ep.title,
+        id: ep.link.replace(baseUrl + '/', '').replace(/^\/|\/$/g, '')
+      })),
+      // Optional: send iframeSrc directly if we are skipping the episode page
+      iframeSrc: data.iframeSrc
+    };
+    return NextResponse.json({ results });
   }
 
   if (server !== "sakura") {

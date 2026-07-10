@@ -14,10 +14,21 @@ export default function AnimeDetail() {
 
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [episodeFilter, setEpisodeFilter] = useState("asc"); // asc, desc
+  const [currentServer, setCurrentServer] = useState("sakura");
+
+  // Sync server state with localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("aneetme-server");
+    if (stored) setCurrentServer(stored);
+
+    const handleServerChange = (e) => setCurrentServer(e.detail);
+    window.addEventListener("server-changed", handleServerChange);
+    return () => window.removeEventListener("server-changed", handleServerChange);
+  }, []);
 
   // Fetch Anime details
   const { data: anime, error, isValidating: loading } = useSWR(
-    animeId ? `/api/info?id=${encodeURIComponent(animeId)}` : null,
+    animeId ? `/api/info?id=${encodeURIComponent(animeId)}&server=${currentServer}` : null,
     fetcher,
     { revalidateOnFocus: false }
   );

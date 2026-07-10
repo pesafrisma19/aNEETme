@@ -18,17 +18,28 @@ export default function Watch() {
 
   const [videoUrl, setVideoUrl] = useState("");
   const [activeServer, setActiveServer] = useState(0);
+  const [currentServer, setCurrentServer] = useState("sakura");
+
+  // Sync server state with localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("aneetme-server");
+    if (stored) setCurrentServer(stored);
+
+    const handleServerChange = (e) => setCurrentServer(e.detail);
+    window.addEventListener("server-changed", handleServerChange);
+    return () => window.removeEventListener("server-changed", handleServerChange);
+  }, []);
 
   // Fetch Streaming link
   const { data: streamData, error: streamError, isValidating: streamLoading } = useSWR(
-    episodeId ? `/api/stream?id=${encodeURIComponent(episodeId)}` : null,
+    episodeId ? `/api/stream?id=${encodeURIComponent(episodeId)}&server=${currentServer}` : null,
     fetcher,
     { revalidateOnFocus: false }
   );
 
   // Fetch Anime details (for episode list navigation)
   const { data: anime, error: animeError } = useSWR(
-    animeId ? `/api/info?id=${encodeURIComponent(animeId)}` : null,
+    animeId ? `/api/info?id=${encodeURIComponent(animeId)}&server=${currentServer}` : null,
     fetcher,
     { revalidateOnFocus: false }
   );
@@ -156,6 +167,17 @@ export default function Watch() {
                   Server scraper gagal mengambil link streaming. Coba refresh halaman atau pilih episode lain.
                 </p>
               </div>
+            ) : streamData?.iframeSrc ? (
+              <iframe
+                src={streamData.iframeSrc}
+                allowFullScreen
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  aspectRatio: "16/9",
+                  border: "none"
+                }}
+              />
             ) : (
               videoUrl && (
                 <VideoPlayer 
