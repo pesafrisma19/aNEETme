@@ -1,143 +1,150 @@
 // src/providers/dramabox.js
 
-const DRAMABOX_HEADERS = {
-  "Accept-Encoding": "gzip",
-  "Connection": "Keep-Alive",
-  "Content-Type": "application/json; charset=UTF-8",
-  "language": "en",
-  "User-Agent": "okhttp/4.12.0",
-  "tn": "Bearer ZXlKMGVYQWlPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LmV5SnlaV2RwYzNSbGNsUjVjR1VpT2lKUVJWSk5RVTVGVGxRaUxDSjFjMlZ5U1dRaU9qVXdNRFV6TURVNU0zMC5hZHVESHhxUkF2V1hOSzl1dlotUDRwWmMwaDF2dDJaZnJMN0ZsOXROU3VN",
-  "st": "cK4n10B_0tTQBrxFMMb12Lvt",
-  "userId": "500530593",
-  "cid": "DRA1000042",
-  "nchid": "DRA1000042",
-  "version": "631",
-  "vn": "6.3.1",
-  "country-code": "ID",
-  "current-language": "en"
-};
+const DRAMABOX_BASE = "https://www.dramaboxapp.com";
 
-const BASE_URL = "https://sapi.dramaboxvideo.com/drama-box/he001";
+// Mendapatkan Next.js buildId yang aktif agar bisa mengakses _next/data
+async function getBuildId() {
+  const res = await fetch(`${DRAMABOX_BASE}/in`);
+  const html = await res.text();
+  const match = html.match(/"buildId":"([^"]+)"/);
+  if (match && match[1]) {
+    return match[1];
+  }
+  return "dramaboxapp_prod_20260703"; // fallback
+}
+
+// Fetch helper untuk Next.js Data API
+async function fetchNextData(path) {
+  const buildId = await getBuildId();
+  const url = `${DRAMABOX_BASE}/_next/data/${buildId}/${path}`;
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+      "x-nextjs-data": "1"
+    }
+  });
+  if (!res.ok) throw new Error("Gagal mengambil data dari DramaBox: " + url);
+  return await res.json();
+}
 
 const DramaboxProvider = {
   id: 'dramabox',
   name: 'DramaBox',
   desc: 'Platform streaming drama pendek',
-  logo: 'https://play-lh.googleusercontent.com/97y_D0Vv5Xj81B80s3d4t6y3iXl3H47b-1-aV8xGvX8Y38KxVv86G1K43yP7b0zH', // Ganti dengan logo yang sesuai
+  logo: 'https://play-lh.googleusercontent.com/97y_D0Vv5Xj81B80s3d4t6y3iXl3H47b-1-aV8xGvX8Y38KxVv86G1K43yP7b0zH',
   
   capabilities: {
     hasMovies: false,
     hasRecommendations: true,
     hasRecent: true,
-    hasSearch: false, // Tambahkan jika ada endpoint search
+    hasSearch: false, // Sementara false sampai kita pakai AES
     hasSchedule: false,
     genres: []
   },
 
   async getRecent(page = 1) {
-    const url = `${BASE_URL}/theater?timestamp=${Date.now()}`;
-    const payload = {
-      homePageStyle: 0,
-      isNeedRank: 1,
-      index: page - 1,
-      type: 1,
-      channelId: 0
-    };
-
-    const res = await fetch(url, { 
-      method: "POST",
-      headers: DRAMABOX_HEADERS,
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) throw new Error("Gagal memuat data theater dari DramaBox");
-    const json = await res.json();
-    
-    // Theater response could be in newTheaterList or recommendList based on your example
-    let records = [];
-    if (json.data?.newTheaterList?.records && json.data.newTheaterList.records.length > 0) {
-      records = json.data.newTheaterList.records;
-    } else if (json.data?.recommendList?.records) {
-      records = json.data.recommendList.records;
+    try {
+      const json = await fetchNextData('in.json');
+      const records = json.pageProps?.bigList || [];
+      
+      return records.map(item => ({
+        id: item.bookId,
+        title: item.bookName,
+        image: item.cover,
+        releaseDate: item.chapterCount ? `${item.chapterCount} Eps` : "",
+        playCount: item.playCount || 0
+      }));
+    } catch (e) {
+      console.error(e);
+      return [];
     }
-
-    return records.map(item => ({
-      id: item.bookId,
-      title: item.bookName,
-      image: item.coverWap || item.cover,
-      releaseDate: item.chapterCount ? `${item.chapterCount} Eps` : "",
-      playCount: item.playCount
-    }));
   },
 
   async getRecommendations(page = 1) {
-    const url = `${BASE_URL}/recommendBook?timestamp=${Date.now()}`;
-    // Memperkirakan payload berdasarkan pagination standar
-    const payload = {
-      current: page,
-      size: 10
-    };
+    try {
+      // Ambil rekomendasi dari halaman episode statis (buku acak atau fallback)
+      const fallbackBookId = "41000104560";
+      const fallbackChapterId = "576077442";
+      const json = await fetchNextData(`in/episode/${fallbackBookId}/${fallbackChapterId}.json?bookId=${fallbackBookId}&chapterId=${fallbackChapterId}`);
+      
+      const records = json.pageProps?.recommends || [];
 
-    const res = await fetch(url, { 
-      method: "POST",
-      headers: DRAMABOX_HEADERS,
-      body: JSON.stringify(payload) // Jika error, mungkin payload ini perlu disesuaikan dengan 129 bytes payload asli
-    });
-
-    if (!res.ok) throw new Error("Gagal memuat data rekomendasi dari DramaBox");
-    const json = await res.json();
-    
-    const records = json.data?.recommendList?.records || [];
-
-    return records.map(item => ({
-      id: item.bookId,
-      title: item.bookName,
-      image: item.coverWap || item.cover,
-      releaseDate: item.chapterCount ? `${item.chapterCount} Eps` : "",
-      playCount: item.playCount
-    }));
+      return records.map(item => ({
+        id: item.bookId,
+        title: item.bookName,
+        image: item.cover,
+        releaseDate: item.chapterCount ? `${item.chapterCount} Eps` : "",
+        playCount: item.playCount || 0
+      }));
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
   },
 
   async getInfo(id) {
-    // Karena belum ada endpoint detail dari user, kita mock atau biarkan throw error dulu,
-    // atau gunakan recommendBook dan search di hasil (tidak disarankan).
-    // Biasanya ada endpoint /bookDetail
-    const url = `${BASE_URL}/bookDetail?timestamp=${Date.now()}`;
-    const payload = { bookId: id };
+    try {
+      // Kita butuh 1 chapterId valid untuk membuka Next.js JSON-nya
+      // Kita asumsikan chapter awal bisa kita dapatkan, tapi karena kita tidak tahu, 
+      // kita butuh endpoint lain atau menggunakan chapter dummy yang me-redirect ke chapter 1.
+      // Next.js _next/data/ membutuhkan chapterId. DramaBox biasanya punya struktur ini.
+      // Untuk amannya, kita load web halamannya dulu untuk mengekstrak data JSON-nya secara langsung.
+      
+      const res = await fetch(`${DRAMABOX_BASE}/in/film/${id}`, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" }
+      });
+      const html = await res.text();
+      
+      // Ekstrak Next.js props dari halaman HTML
+      const jsonMatch = html.match(/<script id="__NEXT_DATA__" type="application\/json">(.+?)<\/script>/);
+      if (!jsonMatch) throw new Error("Tidak menemukan data Next.js");
+      
+      const json = JSON.parse(jsonMatch[1]);
+      const item = json.props?.pageProps?.bookInfo || {};
+      const chapters = json.props?.pageProps?.chapterList || [];
 
-    const res = await fetch(url, {
-      method: "POST",
-      headers: DRAMABOX_HEADERS,
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) throw new Error("Gagal memuat detail drama dari DramaBox");
-    const json = await res.json();
-    
-    const item = json.data?.bookInfo || {};
-
-    // Mock response for now if endpoint is incorrect
-    if (!item.bookId) {
       return {
-        title: "Detail Drama " + id,
-        image: "",
-        synopsis: "Endpoint info/detail belum ditambahkan sepenuhnya.",
+        title: item.bookName || ("Detail Drama " + id),
+        image: item.cover || "",
+        synopsis: item.introduction || "",
         status: "Completed",
-        releaseDate: "",
-        genres: [],
-        episodes: []
+        releaseDate: item.shelfTime || "",
+        genres: (item.tags || []),
+        episodes: chapters.map(ch => ({
+          id: `${id}/${ch.id}`,
+          title: ch.name,
+          episodeNumber: ch.indexStr,
+          isPremium: !ch.unlock
+        }))
       };
+    } catch (e) {
+      console.error(e);
+      throw e;
     }
+  },
 
-    return {
-      title: item.bookName,
-      image: item.coverWap,
-      synopsis: item.introduction,
-      status: item.status === 1 ? "Ongoing" : "Completed",
-      releaseDate: item.shelfTime,
-      genres: (item.tags || []),
-      episodes: [] // Memerlukan endpoint /chapterList
-    };
+  async getStream(id) {
+    try {
+      // ID dari aNEETme akan berbentuk "bookId/chapterId"
+      const [bookId, chapterId] = id.split('/');
+      
+      const json = await fetchNextData(`in/episode/${bookId}/${chapterId}.json?bookId=${bookId}&chapterId=${chapterId}`);
+      
+      const chapters = json.pageProps?.chapterList || [];
+      const currentCh = chapters.find(c => c.id === chapterId);
+      
+      if (!currentCh || !currentCh.unlock || !currentCh.m3u8Url) {
+        throw new Error("Episode berbayar atau tidak ditemukan");
+      }
+
+      return {
+        streamUrl: currentCh.m3u8Url,
+        iframeSrc: null
+      };
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
   }
 };
 
