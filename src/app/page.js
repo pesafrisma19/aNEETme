@@ -500,8 +500,8 @@ export default function Home() {
                 <option value="" style={{ background: "var(--bg-primary)" }}>
                   Semua Genre
                 </option>
-                {genresList.map((g) => (
-                  <option key={g.slug || g.id} value={g.slug || g.id} style={{ background: "var(--bg-primary)" }}>
+                {genresList.map((g, index) => (
+                  <option key={g.slug !== undefined && g.slug !== "" ? g.slug : `genre-${index}`} value={g.slug || g.id} style={{ background: "var(--bg-primary)" }}>
                     {g.name}
                   </option>
                 ))}

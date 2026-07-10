@@ -26,7 +26,7 @@ export default function ServerSelector() {
     setSelectedServer(serverId);
     localStorage.setItem("aneetme-server", serverId);
     setShowModal(false);
-    
+
     // Dispatch custom event to let page.js know to refetch data
     window.dispatchEvent(new Event("server-changed"));
   };
@@ -140,23 +140,23 @@ export default function ServerSelector() {
                     {isActive && (
                       <div style={{ position: "absolute", top: "8px", right: "8px", width: "8px", height: "8px", borderRadius: "50%", background: "var(--accent-cyan)", boxShadow: "0 0 8px var(--accent-cyan)" }} />
                     )}
-                    
-                    <div style={{ 
-                      width: "48px", 
-                      height: "48px", 
-                      borderRadius: "12px", 
-                      overflow: "hidden", 
-                      background: "rgba(0,0,0,0.5)", 
+
+                    <div style={{
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "12px",
+                      overflow: "hidden",
+                      background: "rgba(0,0,0,0.5)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       boxShadow: "0 4px 10px rgba(0,0,0,0.3)"
                     }}>
-                       {server.logo ? (
-                         <img src={server.logo} alt={server.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                       ) : (
-                         <img src={`https://ui-avatars.com/api/?name=${server.name}&background=random&color=fff&size=128&bold=true`} alt={server.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                       )}
+                      {server.logo ? (
+                        <img src={server.logo} alt={server.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        <img src={`https://ui-avatars.com/api/?name=${server.name}&background=random&color=fff&size=128&bold=true`} alt={server.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      )}
                     </div>
 
                     <span style={{ fontSize: "0.8rem", fontWeight: 600, color: isActive ? "var(--accent-cyan)" : "#fff", lineHeight: 1.2 }}>
@@ -166,15 +166,16 @@ export default function ServerSelector() {
                 );
               })}
             </div>
-            
+
             <p style={{ fontSize: "0.8rem", color: "var(--foreground-muted)", textAlign: "center", marginTop: "20px", marginBottom: 0 }}>
               Setiap server memiliki database konten yang berbeda. Jika tidak menemukan apa yang Anda cari, cobalah server lain!
             </p>
           </div>
         </div>
       )}
-      
-      <style dangerouslySetInnerHTML={{__html: `
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
