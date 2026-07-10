@@ -18,12 +18,12 @@ export default function Watch() {
 
   const [videoUrl, setVideoUrl] = useState("");
   const [activeServer, setActiveServer] = useState(0);
-  const [currentServer, setCurrentServer] = useState("sakura");
+  const [currentServer, setCurrentServer] = useState("animelovers");
 
   // Sync server state with localStorage
   useEffect(() => {
-    const stored = localStorage.getItem("aneetme-server");
-    if (stored) setCurrentServer(stored);
+    const saved = localStorage.getItem("aneetme-server") || "animelovers";
+    setCurrentServer(saved);
 
     const handleServerChange = (e) => setCurrentServer(e.detail);
     window.addEventListener("server-changed", handleServerChange);

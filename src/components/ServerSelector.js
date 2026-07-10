@@ -4,13 +4,11 @@ import { useState, useEffect } from "react";
 
 export default function ServerSelector() {
   const [showModal, setShowModal] = useState(false);
-  const [selectedServer, setSelectedServer] = useState("sakura");
+  const [selectedServer, setSelectedServer] = useState("animelovers");
 
   const servers = [
-    { id: "sakura", name: "🌸 Server Sakura", desc: "Dominan Anime (Update Cepat)" },
-    { id: "dragon", name: "🐉 Server Dragon", desc: "Dominan Donghua (Animasi 3D)" },
-    { id: "dynasty", name: "🏯 Server Dynasty", desc: "Dominan Dracin (Drama China)" },
-    { id: "cinema", name: "🎬 Server Cinema", desc: "Dominan Film & Live Action" },
+    { id: "animelovers", name: "AnimeLovers", desc: "Server khusus pencinta anime" },
+    { id: "lk21", name: "LK21", desc: "Film & Bioskop (Membutuhkan proxy/VPS)" }
   ];
 
   useEffect(() => {

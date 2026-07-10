@@ -8,16 +8,17 @@ const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function Home() {
   const [searchVal, setSearchVal] = useState("");
-  const [currentServer, setCurrentServer] = useState("sakura");
+  const [currentServer, setCurrentServer] = useState("animelovers");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Initial load
-    const saved = localStorage.getItem("aneetme-server") || "sakura";
+    const saved = localStorage.getItem("aneetme-server") || "animelovers";
     setCurrentServer(saved);
 
     // Event listener
     const handleServerChange = () => {
-      const newServer = localStorage.getItem("aneetme-server") || "sakura";
+      const newServer = localStorage.getItem("aneetme-server") || "animelovers";
       setCurrentServer(newServer);
     };
 
