@@ -9,6 +9,14 @@ const HEADERS = {
   "Cache-Control": "no-cache"
 };
 
+// Helper function untuk fetch dengan Proxy
+async function fetchWithProxy(url) {
+  const proxyBase = process.env.CF_PROXY;
+  const finalUrl = proxyBase ? `${proxyBase}?url=${encodeURIComponent(url)}` : url;
+  
+  return fetch(finalUrl, { headers: HEADERS });
+}
+
 const AnichinProvider = {
   id: 'anichin',
   name: 'Anichin',
@@ -64,7 +72,7 @@ const AnichinProvider = {
 
   async _parseList(url) {
     try {
-      const res = await fetch(url, { headers: HEADERS });
+      const res = await fetchWithProxy(url);
       const html = await res.text();
       const $ = cheerio.load(html);
       
@@ -109,7 +117,7 @@ const AnichinProvider = {
 
   async getInfo(id) {
     try {
-      const res = await fetch(`${ANICHIN_BASE}/donghua/${id}/`, { headers: HEADERS });
+      const res = await fetchWithProxy(`${ANICHIN_BASE}/donghua/${id}/`);
       const html = await res.text();
       const $ = cheerio.load(html);
       
@@ -149,7 +157,7 @@ const AnichinProvider = {
   async getStream(id) {
     try {
       // id is episode slug
-      const res = await fetch(`${ANICHIN_BASE}/${id}/`, { headers: HEADERS });
+      const res = await fetchWithProxy(`${ANICHIN_BASE}/${id}/`);
       const html = await res.text();
       const $ = cheerio.load(html);
       
