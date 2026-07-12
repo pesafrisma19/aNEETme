@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getProvider } from "@/providers";
 
-export async function GET(request) {
+export async function GET(request, { params }) {
+  const { provider: server } = await params;
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
-  const server = searchParams.get("server") || "animelovers";
 
   if (!id) {
     return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });

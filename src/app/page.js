@@ -46,7 +46,7 @@ export default function Home() {
       setRecentError(null);
       setHasMoreRecent(true);
 
-      fetch(`/api/search?server=${currentServer}&type=recent&page=1`)
+      fetch(`/api/v1/${currentServer}/search?type=recent&page=1`)
         .then((res) => {
           if (!res.ok) throw new Error("Gagal memuat");
           return res.json();
@@ -71,7 +71,7 @@ export default function Home() {
     setRecentLoading(true);
     const nextPage = recentPage + 1;
     try {
-      const res = await fetch(`/api/search?server=${currentServer}&type=recent&page=${nextPage}`);
+      const res = await fetch(`/api/v1/${currentServer}/search?type=recent&page=${nextPage}`);
       if (!res.ok) throw new Error("Gagal memuat halaman berikutnya");
       const data = await res.json();
       const newItems = data.results || [];
@@ -101,7 +101,7 @@ export default function Home() {
   const [providers, setProviders] = useState([]);
   
   useEffect(() => {
-    fetch('/api/providers')
+    fetch('/api/v1/providers')
       .then(res => res.json())
       .then(data => setProviders(data))
       .catch(console.error);
@@ -119,7 +119,7 @@ export default function Home() {
       setGenreError(null);
       setHasMoreGenre(true);
 
-      fetch(`/api/search?server=${currentServer}&genre=${selectedGenre}&page=1`)
+      fetch(`/api/v1/${currentServer}/search?genre=${selectedGenre}&page=1`)
         .then((res) => {
           if (!res.ok) throw new Error("Gagal memuat");
           return res.json();
@@ -144,7 +144,7 @@ export default function Home() {
     setGenreLoading(true);
     const nextPage = genrePage + 1;
     try {
-      const res = await fetch(`/api/search?server=${currentServer}&genre=${selectedGenre}&page=${nextPage}`);
+      const res = await fetch(`/api/v1/${currentServer}/search?genre=${selectedGenre}&page=${nextPage}`);
       if (!res.ok) throw new Error("Gagal memuat");
       const data = await res.json();
       const newItems = data.results || [];
@@ -195,7 +195,7 @@ export default function Home() {
       setMovieError(null);
       setHasMoreMovie(true);
 
-      fetch(`/api/search?server=${currentServer}&type=movie&page=1`)
+      fetch(`/api/v1/${currentServer}/search?type=movie&page=1`)
         .then((res) => {
           if (!res.ok) throw new Error("Gagal memuat film bioskop");
           return res.json();
@@ -220,7 +220,7 @@ export default function Home() {
     setMovieLoading(true);
     const nextPage = moviePage + 1;
     try {
-      const res = await fetch(`/api/search?server=${currentServer}&type=movie&page=${nextPage}`);
+      const res = await fetch(`/api/v1/${currentServer}/search?type=movie&page=${nextPage}`);
       if (!res.ok) throw new Error("Gagal memuat film berikutnya");
       const data = await res.json();
       const newItems = data.results || [];
@@ -249,7 +249,7 @@ export default function Home() {
       setRecommendError(null);
       setHasMoreRecommend(true);
 
-      fetch(`/api/search?server=${currentServer}&type=recommend&page=1`)
+      fetch(`/api/v1/${currentServer}/search?type=recommend&page=1`)
         .then((res) => {
           if (!res.ok) throw new Error("Gagal memuat rekomendasi");
           return res.json();
@@ -274,7 +274,7 @@ export default function Home() {
     setRecommendLoading(true);
     const nextPage = recommendPage + 1;
     try {
-      const res = await fetch(`/api/search?server=${currentServer}&type=recommend&page=${nextPage}`);
+      const res = await fetch(`/api/v1/${currentServer}/search?type=recommend&page=${nextPage}`);
       if (!res.ok) throw new Error("Gagal memuat rekomendasi berikutnya");
       const data = await res.json();
       const newItems = data.results || [];
@@ -307,7 +307,7 @@ export default function Home() {
       setScheduleLoading(true);
       setScheduleError(null);
       
-      fetch(`/api/schedule?server=${currentServer}`)
+      fetch(`/api/v1/schedule`)
         .then((res) => {
           if (!res.ok) throw new Error("Gagal memuat jadwal rilis");
           return res.json();
@@ -339,7 +339,7 @@ export default function Home() {
 
   // Fetch search results
   const { data: searchData, error: searchError, isValidating: searchLoading } = useSWR(
-    (!isLoading && submittedQuery) ? `/api/search?server=${currentServer}&q=${encodeURIComponent(submittedQuery)}` : null,
+    (!isLoading && submittedQuery) ? `/api/v1/${currentServer}/search?q=${encodeURIComponent(submittedQuery)}` : null,
     fetcher
   );
   const searchResults = searchData?.results || null;

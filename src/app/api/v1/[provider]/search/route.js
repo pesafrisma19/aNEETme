@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { getProvider } from "@/providers";
 
-export async function GET(request) {
+export async function GET(request, { params }) {
+  const { provider: server } = await params;
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
   const type = searchParams.get("type");
   const genre = searchParams.get("genre");
   const page = searchParams.get("page") || "1";
-  const server = searchParams.get("server") || "animelovers";
 
   const provider = getProvider(server);
   if (!provider) {

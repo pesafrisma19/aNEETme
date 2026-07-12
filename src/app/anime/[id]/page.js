@@ -36,7 +36,7 @@ export default function AnimeDetail() {
 
   // Fetch Anime details
   const { data: anime, error, isValidating: loading } = useSWR(
-    animeId ? `/api/info?id=${encodeURIComponent(animeId)}&server=${currentServer}` : null,
+    animeId ? `/api/v1/${currentServer}/info?id=${encodeURIComponent(animeId)}` : null,
     fetcher,
     { revalidateOnFocus: false }
   );
@@ -144,7 +144,7 @@ export default function AnimeDetail() {
         <div className="details-poster" style={{ width: "100%", maxWidth: "260px", display: "flex", flexDirection: "column", gap: "20px", position: "relative", zIndex: 1 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={anime.image}
+            src={anime.image || "https://ui-avatars.com/api/?name=No+Image&background=333&color=fff&size=512"}
             alt={anime.title}
             style={{
               width: "100%",

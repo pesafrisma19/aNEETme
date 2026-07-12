@@ -8,7 +8,7 @@ export default function ServerSelector() {
   const [servers, setServers] = useState([]);
 
   useEffect(() => {
-    fetch('/api/providers')
+    fetch('/api/v1/providers')
       .then(res => res.json())
       .then(data => setServers(data))
       .catch(console.error);

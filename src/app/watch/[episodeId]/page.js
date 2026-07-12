@@ -38,14 +38,14 @@ export default function Watch() {
 
   // Fetch Streaming link
   const { data: streamData, error: streamError, isValidating: streamLoading } = useSWR(
-    episodeId ? `/api/stream?id=${encodeURIComponent(episodeId)}&server=${currentServer}` : null,
+    episodeId ? `/api/v1/${currentServer}/stream?id=${encodeURIComponent(episodeId)}` : null,
     fetcher,
     { revalidateOnFocus: false }
   );
 
   // Fetch Anime details (for episode list navigation)
   const { data: anime, error: animeError } = useSWR(
-    animeId ? `/api/info?id=${encodeURIComponent(animeId)}&server=${currentServer}` : null,
+    animeId ? `/api/v1/${currentServer}/info?id=${encodeURIComponent(animeId)}` : null,
     fetcher,
     { revalidateOnFocus: false }
   );

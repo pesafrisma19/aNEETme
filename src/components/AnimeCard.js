@@ -28,7 +28,7 @@ export default function AnimeCard({ id, title, image, episodeNumber, releaseDate
           {/* Image */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
-            src={image} 
+            src={image || "https://ui-avatars.com/api/?name=No+Image&background=333&color=fff&size=512"} 
             alt={title} 
             style={{
               width: "100%",
